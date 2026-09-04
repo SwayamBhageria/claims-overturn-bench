@@ -297,12 +297,28 @@ Over 2024-01-01 – 2026-08-31. These are rates over **decisions matching a full
 
 ## The checker
 
+**It runs straight after a clone. There is no build step.**
+
+```bash
+git clone https://github.com/SwayamBhageria/claims-overturn-bench
+cd claims-overturn-bench && pip install -r requirements.txt
+
+echo '{"facts": "Policyholder made a claim on a travel policy after falling ill abroad
+       and remaining past the planned return date. We requested a medical report from
+       the treating hospital, it was not received, and it was not chased for eleven
+       weeks. We declined the claim as there was no evidence it was medically
+       necessary for her to remain abroad.", "decision": "decline"}' \
+  | python -m checker.check
 ```
-$ echo '{"facts": "Policyholder fell ill abroad and stayed past the return date.
-          Medical report requested but not received. Claim declined as the
-          circumstances are not covered.", "decision": "decline"}' \
-    | python -m checker.check
-```
+
+That takes about a second. The repository ships a prebuilt precedent index
+(`data/index.npz`, 2.9 MB) so the hour of fetching that builds the corpus is only needed if
+you want to reproduce the measurements or extend the corpus yourself. The index is TF-IDF
+weights over a fixed vocabulary — word order is not retained, so the decisions cannot be
+reconstructed from it, which keeps the same position on redistribution the rest of the repo
+takes. `python -m tools.build_index` regenerates it from a local corpus.
+
+Add `--json` for machine-readable output, or `-k` to change how many precedents come back.
 
 Returns an overturn risk, the nearest published decisions with references and links, the grounds
 those precedents turned on, and a checklist drawn from them.

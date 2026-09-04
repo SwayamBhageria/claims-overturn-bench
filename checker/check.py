@@ -165,13 +165,60 @@ def weak_threshold(model: PrecedentKNN, cases: list[Case], sample: int = 200,
     return float(np.percentile(means, WEAK_PERCENTILE)) if means else 0.0
 
 
+PREBUILT_MATRIX = ROOT / "data" / "index.npz"
+PREBUILT_META = ROOT / "data" / "index_meta.json"
+
+
+def _load_prebuilt() -> tuple[PrecedentKNN, list[Case], float] | None:
+    """The shipped index, so a fresh clone can run the checker immediately.
+
+    Returns None if it is not present, in which case the caller builds from the
+    local corpus. Both paths produce the same answers; this one skips the hour
+    of fetching that standing up the corpus takes.
+    """
+    if not (PREBUILT_MATRIX.exists() and PREBUILT_META.exists()):
+        return None
+
+    import numpy as np
+    import scipy.sparse as sp
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    meta = json.loads(PREBUILT_META.read_text())
+    model = PrecedentKNN(k=15)
+    # Rebuild the vectoriser from stored vocabulary and idf rather than
+    # unpickling one: a pickle is version-fragile and asks a stranger to
+    # execute whatever is in the file.
+    vec = TfidfVectorizer(vocabulary=meta["vocabulary"], ngram_range=(1, 2),
+                          sublinear_tf=True, strip_accents="unicode")
+    vec.idf_ = np.asarray(meta["idf"], dtype=np.float64)
+    model.vec = vec
+    model.X = sp.load_npz(PREBUILT_MATRIX)
+    model.y = np.asarray([c["upheld"] for c in meta["cases"]], dtype=float)
+    model.texts = []
+
+    cases = [Case(drn=c["drn"], date=c["date"], business=c["business"],
+                  upheld=c["upheld"], product=c["product"],
+                  complaint_type="claim", url=c["url"], text="",
+                  text_with_investigator="", has_investigator_view=False,
+                  reasoning="", outcome_text="", grounds=c["grounds"])
+             for c in meta["cases"]]
+    return model, cases, float(meta["weak_threshold"])
+
+
 def build_index(cases: list[Case] | None = None
                 ) -> tuple[PrecedentKNN, list[Case], float]:
-    cases = cases if cases is not None else load_cases()
+    if cases is None:
+        prebuilt = _load_prebuilt()
+        if prebuilt is not None:
+            return prebuilt
+        cases = load_cases()
     if not cases:
         raise SystemExit(
-            "no corpus: run `python -m corpus.build` first (about 50 minutes, "
-            "it fetches published decisions from the ombudsman's website)")
+            "no corpus and no prebuilt index. Either is enough:\n"
+            "  python -m tools.build_index   (if data/index.npz is missing but "
+            "the corpus is present)\n"
+            "  python -m corpus.build        (about an hour; fetches the "
+            "decisions from the ombudsman's website)")
     model = PrecedentKNN(k=15).fit([c.text for c in cases], [c.upheld for c in cases])
     return model, cases, weak_threshold(model, cases)
 
