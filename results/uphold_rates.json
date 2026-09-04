@@ -1,0 +1,107 @@
+{
+  "date_from": "2024-01-01",
+  "date_to": "2026-08-31",
+  "note": "rates over published decisions matching a full-text phrase; a phrase is not a product and a published decision is not a claim",
+  "by_phrase": {
+    "travel insurance claim": {
+      "upheld": 1074,
+      "not_upheld": 1392,
+      "total": 2466,
+      "rate": 0.43552311435523117,
+      "ci95": [
+        0.4160684875676829,
+        0.45517831627593197
+      ]
+    },
+    "pet insurance claim": {
+      "upheld": 372,
+      "not_upheld": 484,
+      "total": 856,
+      "rate": 0.43457943925233644,
+      "ci95": [
+        0.40173694239247665,
+        0.46800650802908944
+      ]
+    },
+    "gadget insurance claim": {
+      "upheld": 60,
+      "not_upheld": 98,
+      "total": 158,
+      "rate": 0.379746835443038,
+      "ci95": [
+        0.3077741815261871,
+        0.4574283374800512
+      ]
+    },
+    "mobile phone insurance claim": {
+      "upheld": 223,
+      "not_upheld": 328,
+      "total": 551,
+      "rate": 0.4047186932849365,
+      "ci95": [
+        0.3645308543466779,
+        0.4462259454318535
+      ]
+    },
+    "motor insurance claim": {
+      "upheld": 2173,
+      "not_upheld": 2712,
+      "total": 4885,
+      "rate": 0.44483111566018424,
+      "ci95": [
+        0.4309440109132823,
+        0.45880492265822054
+      ]
+    },
+    "home insurance claim": {
+      "upheld": 2992,
+      "not_upheld": 3982,
+      "total": 6974,
+      "rate": 0.42902208201892744,
+      "ci95": [
+        0.41744807737223705,
+        0.4406742394198209
+      ]
+    },
+    "buildings insurance claim": {
+      "upheld": 1654,
+      "not_upheld": 1907,
+      "total": 3561,
+      "rate": 0.4644762707104746,
+      "ci95": [
+        0.4481423061958032,
+        0.48088679849148497
+      ]
+    },
+    "contents insurance claim": {
+      "upheld": 3569,
+      "not_upheld": 4181,
+      "total": 7750,
+      "rate": 0.4605161290322581,
+      "ci95": [
+        0.4494411347834271,
+        0.47163024743309906
+      ]
+    },
+    "warranty claim": {
+      "upheld": 857,
+      "not_upheld": 772,
+      "total": 1629,
+      "rate": 0.5260896255371393,
+      "ci95": [
+        0.5018088423170587,
+        0.5502476461996474
+      ]
+    },
+    "declined the claim": {
+      "upheld": 7701,
+      "not_upheld": 11035,
+      "total": 18736,
+      "rate": 0.4110269000853971,
+      "ci95": [
+        0.40400052167604006,
+        0.4180897568244998
+      ]
+    }
+  }
+}

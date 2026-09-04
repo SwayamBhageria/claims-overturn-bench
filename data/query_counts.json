@@ -1,0 +1,247 @@
+{
+  "date_from": "2024-01-01",
+  "date_to": "2026-08-31",
+  "slice_months": 6,
+  "per_query": {
+    "travel insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "gadget insurance claim|2024-01-01": {
+      "upheld": 16,
+      "not_upheld": 12
+    },
+    "mobile phone insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "motor insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "declined the claim|2024-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "travel insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "gadget insurance claim|2024-07-01": {
+      "upheld": 9,
+      "not_upheld": 14
+    },
+    "mobile phone insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "motor insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "declined the claim|2024-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "travel insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "gadget insurance claim|2025-01-01": {
+      "upheld": 13,
+      "not_upheld": 19
+    },
+    "mobile phone insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "motor insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "declined the claim|2025-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "travel insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "gadget insurance claim|2025-07-01": {
+      "upheld": 8,
+      "not_upheld": 20
+    },
+    "mobile phone insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "motor insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "declined the claim|2025-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "travel insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "gadget insurance claim|2026-01-01": {
+      "upheld": 14,
+      "not_upheld": 20
+    },
+    "mobile phone insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "motor insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "declined the claim|2026-01-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "travel insurance claim|2026-07-01": {
+      "upheld": 15,
+      "not_upheld": 20
+    },
+    "pet insurance claim|2026-07-01": {
+      "upheld": 12,
+      "not_upheld": 15
+    },
+    "gadget insurance claim|2026-07-01": {
+      "upheld": 0,
+      "not_upheld": 6
+    },
+    "mobile phone insurance claim|2026-07-01": {
+      "upheld": 8,
+      "not_upheld": 4
+    },
+    "motor insurance claim|2026-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "home insurance claim|2026-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "buildings insurance claim|2026-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "contents insurance claim|2026-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    },
+    "warranty claim|2026-07-01": {
+      "upheld": 12,
+      "not_upheld": 20
+    },
+    "declined the claim|2026-07-01": {
+      "upheld": 20,
+      "not_upheld": 20
+    }
+  }
+}

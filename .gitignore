@@ -1,0 +1,7 @@
+.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+results/llm_cache/
+data/labels.json
