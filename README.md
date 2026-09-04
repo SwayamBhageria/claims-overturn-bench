@@ -95,14 +95,26 @@ tagger's accuracy against a hand-labelled sample is reported in
 
 ### The distinction the word "upheld" hides
 
-"Upheld" covers two commercially different events. In one, the ombudsman decides the claim
-should have been paid. In the other, the declinature stands and the insurer loses anyway — on
-delay, on evidence it never asked for, on an explanation nobody could follow. Read
-`claim_decision_stood` in `results/analysis.json` for how the corpus splits.
+"Upheld" covers two commercially different events. In one, the ombudsman decides the claim should
+have been paid. In the other the declinature **stands**, and the insurer loses anyway — on delay,
+on evidence it never asked for, on an explanation nobody could follow.
+
+<!--AUTO:VALIDATION-->
+*Run `python -m bench.run`.*
+<!--/AUTO:VALIDATION-->
 
 That distinction is the finding. The first kind is underwriting judgement and it is hard to
-automate away. The second is operational, it is inside the control of whoever administers the
-claim, and it is what the category's speed metrics are already adjacent to without ever claiming.
+automate away. The second is operational, it sits inside the control of whoever administers the
+claim, and it is the thing the category's speed metrics are already adjacent to without ever
+claiming.
+
+**This number was wrong until it was checked by hand, and it is worth saying how.** The split is
+produced by rules over the operative directions. The first version of those rules put the
+claim-stood share near half. Reading the decisions it had classified that way found "accept the
+claim and repair the laptop", "increase the cash settlement to £355" and "pay Mr W's claim for
+his pet's treatment" all counted as the claim being left alone. The rules were rewritten, and
+then validated on a sample drawn and labelled *after* they were frozen, because the two samples
+used to build them cannot test them.
 
 ---
 

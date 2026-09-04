@@ -135,6 +135,30 @@ def block_products(a: dict) -> str:
             "decision is the tail of complaints that reached an ombudsman.")
 
 
+def block_validation(a: dict) -> str:
+    """The hand-labelled estimate, with the rule's measured accuracy beside it."""
+    path = ROOT / "results" / "remedy_validation.json"
+    if not path.exists():
+        return "*No validation record.*"
+    v = json.loads(path.read_text())
+    p, r = v["pooled"], v["rule_on_clean_sample"]
+    lo, hi = p["claim_decision_stood_ci95"]
+    return "\n".join([
+        f"**{_pct(p['claim_decision_stood_share'])} of upheld claim complaints left the "
+        f"claim decision intact** (95% CI {_pct(lo)} – {_pct(hi)}, "
+        f"{p['n']} decisions labelled by hand). The insurer\'s answer stood; it lost on "
+        f"how it got there.",
+        "",
+        "| | |", "|---|---:|",
+        f"| decisions hand-labelled | {p['n']} |",
+        f"| claim decision changed | {p['disturbed']} ({_pct(p['share'])}) |",
+        f"| claim decision stood | {p['n'] - p['disturbed']} "
+        f"({_pct(p['claim_decision_stood_share'])}) |",
+        f"| rule accuracy, clean sample (n={r['n']}) | {_pct(r['accuracy'])} |",
+        f"| rule precision / recall | {_pct(r['precision'])} / {_pct(r['recall'])} |",
+    ])
+
+
 def block_example(a: dict) -> str:
     """The worked example, from its own results file."""
     path = ROOT / "results" / "worked_example.json"
@@ -182,6 +206,7 @@ BLOCKS = {
     "COMPOSITION": block_composition,
     "LEAKAGE": block_leakage,
     "GROUNDS": block_grounds,
+    "VALIDATION": block_validation,
     "COST": block_cost,
     "PREDICTION": block_prediction,
     "INVESTIGATOR": block_investigator,
