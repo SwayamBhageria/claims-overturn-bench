@@ -98,14 +98,20 @@ def block_cost(a: dict) -> str:
         return "*No award figures recovered.*"
     return "\n".join([
         "| | |", "|---|---:|",
-        f"| upheld decisions carrying a sterling award | {c['cases_with_award']:,} "
+        f"| upheld decisions awarding compensation | {c['cases_with_award']:,} "
         f"({_pct(c['share_of_upheld_with_award'])} of upheld) |",
-        f"| median award | £{c['median_award_gbp']:,.0f} |",
-        f"| mean award | £{c['mean_award_gbp']:,.0f} |",
+        f"| median compensation | £{c['median_award_gbp']:,.0f} |",
+        f"| mean compensation | £{c['mean_award_gbp']:,.0f} |",
         f"| 90th percentile | £{c['p90_award_gbp']:,.0f} |",
         f"| largest in corpus | £{c['max_award_gbp']:,.0f} |",
         f"| ombudsman case fee, 2026/27, payable either way | "
         f"£{c['fos_case_fee_gbp_2026_27']} |",
+        "",
+        "Compensation for the experience only. The claim settlement is not extracted: "
+        "remedy sections name the settlement, the earlier offer, the valuation and the "
+        "policy limit in adjacent sentences, and picking between them reliably is not "
+        "something a rule does well. So this column is the **smaller half** of what an "
+        "overturned decision costs.",
     ])
 
 
@@ -127,6 +133,15 @@ def block_products(a: dict) -> str:
             "**decisions matching a full-text phrase**, not over products and not "
             "over claims: the search has no product field, and a published "
             "decision is the tail of complaints that reached an ombudsman.")
+
+
+def block_example(a: dict) -> str:
+    """The worked example, from its own results file."""
+    path = ROOT / "results" / "worked_example.json"
+    if not path.exists():
+        return "*Run `python -m tools.worked_example`.*"
+    from tools.worked_example import markdown
+    return markdown(json.loads(path.read_text()))
 
 
 def block_investigator(a: dict) -> str:
@@ -171,6 +186,7 @@ BLOCKS = {
     "PREDICTION": block_prediction,
     "INVESTIGATOR": block_investigator,
     "TRIAGE": block_triage,
+    "EXAMPLE": block_example,
     "PRODUCTS": block_products,
 }
 

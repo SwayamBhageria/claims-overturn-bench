@@ -62,6 +62,38 @@ def test_awards_read_thousands_and_pence():
     assert grounds.awards(text) == [1250.50]
 
 
+# Award extraction covers compensation only. Remedy sections name the
+# settlement, the earlier offer, the valuation and the policy limit in
+# adjacent sentences, and an earlier version that took the largest sum in an
+# award-shaped sentence returned a vehicle's £24,300 valuation as an award.
+# Every wording below is from a real decision.
+
+def test_the_claim_settlement_is_not_counted_as_compensation():
+    text = ("I require Covea Insurance plc to: Pay £25,924 to settle the "
+            "claim. Pay £100 compensation.")
+    assert grounds.awards(text) == [100.0]
+
+
+def test_a_valuation_in_the_remedy_is_not_an_award():
+    text = ("Pay Mr K a further £550 in settlement of the value of Mr K's "
+            "vehicle, this being the difference between its latest valuation "
+            "of £24,300 and its previous valuation of £23,750.")
+    assert grounds.awards(text) == []
+
+
+def test_the_figure_nearest_the_word_wins_over_the_largest():
+    text = ("Pay Mr K £250 in compensation for the distress and inconvenience "
+            "caused. It can deduct the £150 previously offered.")
+    assert grounds.awards(text) == [250.0]
+
+
+def test_business_interruption_settlement_is_not_compensation():
+    text = ("Pay £40,000 in respect of the business interruption claim, "
+            "together with interest at 8% simple per annum. Pay Mr G the sum "
+            "of £1,250 compensation for the distress and inconvenience caused.")
+    assert grounds.awards(text) == [1250.0]
+
+
 def test_distribution_counts_untagged_cases():
     d = grounds.distribution([["delay"], ["delay", "evidence"], []])
     assert d["n"] == 3

@@ -42,7 +42,7 @@ N_SPLITS = 5
 SEED = 0
 
 
-def composition(rows: list[dict], cases) -> dict:
+def composition(rows: list[dict], cases, corpus_path=None) -> dict:
     types = Counter(r.get("complaint_type") for r in rows)
     n = len(rows)
     return {
@@ -59,7 +59,7 @@ def composition(rows: list[dict], cases) -> dict:
         "by_respondent_top10": dict(Counter(c.business for c in cases).most_common(10)),
         "distinct_respondents": len({c.business for c in cases}),
         "input_words_median": statistics.median(len(c.text.split()) for c in cases),
-        "hash_check": verify_hashes(),
+        "hash_check": verify_hashes(corpus_path) if corpus_path else verify_hashes(),
     }
 
 
@@ -290,10 +290,17 @@ def product_mix(cases) -> dict:
 
 
 def main() -> int:
-    rows = read_rows()
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--corpus", type=Path, default=CORPUS,
+                    help="corpus JSONL to analyse (default: data/corpus.jsonl)")
+    ap.add_argument("--out", type=Path, default=RESULTS)
+    a = ap.parse_args()
+
+    rows = read_rows(a.corpus)
     if not rows:
-        raise SystemExit("no corpus — run `python -m corpus.build` first")
-    cases = load_cases()
+        raise SystemExit(f"no corpus at {a.corpus} — run `python -m corpus.build`")
+    cases = load_cases(path=a.corpus)
     if len(cases) < 100:
         raise SystemExit(f"only {len(cases)} usable cases; expected hundreds. "
                          "Check .cache/pdfs is populated.")
@@ -302,10 +309,10 @@ def main() -> int:
     pred = prediction(cases)
 
     out = {
-        "corpus_file": str(CORPUS.relative_to(ROOT)),
+        "corpus_file": str(a.corpus),
         "n_splits": N_SPLITS,
         "seed": SEED,
-        "composition": composition(rows, cases),
+        "composition": composition(rows, cases, a.corpus),
         "leakage": leakage(cases),
         "grounds": grounds_analysis(cases),
         "cost": cost(cases),
@@ -314,9 +321,9 @@ def main() -> int:
         "triage": triage(pred),
         "product_mix": product_mix(cases),
     }
-    RESULTS.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS.write_text(json.dumps(out, indent=2, default=float))
-    print(f"wrote {RESULTS.relative_to(ROOT)}")
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    a.out.write_text(json.dumps(out, indent=2, default=float))
+    print(f"wrote {a.out}")
     return 0
 
 

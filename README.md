@@ -42,13 +42,20 @@ to be quite a lot.
 *Run `python -m corpus.build` then `python -m bench.run`.*
 <!--/AUTO:COMPOSITION-->
 
-The first number that matters is the one about what these decisions are *about*. A large share
-of published insurance decisions are not about a claim at all — they are about a premium rise, a
-mis-sale, or a cancellation. Scoring a claims model on those would pad the sample with cases
-where the model is answering a question nobody asked it, so they are classified out, counted,
-and reported. The classifier reads the decision's own opening sentence rather than trusting the
-search query that retrieved it, because the ombudsman's `Keyword` field is full-text: a search
-for "motor insurance claim" returns travel decisions that mention a hire car.
+Not every published insurance decision is about a claim. Many are about a premium rise, a
+mis-sale at the point of sale, or a mid-term cancellation, and scoring a claims model on those
+pads the sample with cases where the model is answering a question nobody asked it. They are
+classified out by reading each decision's own opening sentence, then counted and reported rather
+than silently dropped.
+
+The share excluded here is small, and that is a fact about the retrieval rather than about the
+ombudsman: every query used to build this corpus contains the word "claim", so the set that comes
+back is already claim-heavy. It is not an estimate of how much of the ombudsman's insurance
+casework is about claims, and nothing here should be read as one.
+
+The classifier reads the decision rather than trusting the query that retrieved it, because the
+`Keyword` field is full-text: a search for "motor insurance claim" also returns travel decisions
+that mention a hire car.
 
 ### The split, and why it has to be airtight
 
@@ -181,6 +188,12 @@ $ echo '{"facts": "Policyholder fell ill abroad and stayed past the return date.
 
 Returns an overturn risk, the nearest published decisions with references and links, the grounds
 those precedents turned on, and a checklist drawn from them.
+
+### A worked example
+
+<!--AUTO:EXAMPLE-->
+*Run `python -m tools.worked_example`.*
+<!--/AUTO:EXAMPLE-->
 
 The retrieval model wears the interface even where a classifier scores higher, and that is
 deliberate. A claims decision has to be explainable to the policyholder, to the client, and

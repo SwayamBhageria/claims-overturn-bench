@@ -236,17 +236,42 @@ def compensation_only(remedy: str) -> bool:
     return bool(_COMPENSATION.search(remedy)) and not claim_decision_disturbed(remedy)
 
 
-def awards(putting_right: str) -> list[float]:
-    """Sterling sums awarded in the remedy section, in sentence context."""
+def awards(remedy: str) -> list[float]:
+    """Compensation awarded for the experience, in sterling.
+
+    **Only compensation.** The claim settlement is deliberately not extracted,
+    and that is a limitation with a reason rather than an oversight. Remedy
+    sections quote the settlement, the insurer's earlier offer, the vehicle's
+    latest valuation and the policy limit in adjacent sentences, and taking the
+    largest sum in an award-shaped sentence picks the wrong one often enough to
+    be useless: in one decision it returned £24,300, the vehicle's valuation,
+    where the sum actually awarded was the £550 difference between two
+    valuations.
+
+    Compensation is well defined — the ombudsman names it as compensation, for
+    distress, inconvenience, trouble or upset — so that is what is measured.
+    It is the smaller half of the cost, and the README says so.
+    """
     out: list[float] = []
-    for sentence in re.split(r"(?<=[.;])\s+", putting_right):
-        if not _AWARD_CONTEXT.search(sentence):
+    for sentence in re.split(r"(?<=[.;])\s+", remedy):
+        if not _COMPENSATION.search(sentence):
             continue
-        for m in _MONEY.finditer(sentence):
-            try:
-                out.append(float(m.group(1).replace(",", "")))
-            except ValueError:
-                continue
+        # A sentence awarding compensation can still name another sum ("deduct
+        # the £150 previously offered"), so take the figure sitting closest to
+        # the word itself rather than the largest in the sentence.
+        best: tuple[int, float] | None = None
+        for word in re.finditer(r"compensation|distress|inconvenience|trouble|upset",
+                                sentence, re.I):
+            for m in _MONEY.finditer(sentence):
+                try:
+                    value = float(m.group(1).replace(",", ""))
+                except ValueError:
+                    continue
+                gap = abs(m.start() - word.start())
+                if best is None or gap < best[0]:
+                    best = (gap, value)
+        if best:
+            out.append(best[1])
     return out
 
 
