@@ -42,13 +42,31 @@ N_SPLITS = 5
 SEED = 0
 
 
+def _as_date(value):
+    """Parse the listing's "9 May 2025" into a date.
+
+    Worth its own function because the obvious thing is wrong: these are
+    strings, and min()/max() over them sorts alphabetically. A corpus running
+    from January 2024 to August 2026 reported its range as "1 Dec 2024 to
+    9 May 2025", which is what you get when "1" sorts before "9" and "Dec"
+    before "May".
+    """
+    from datetime import datetime
+    try:
+        return datetime.strptime(value, "%d %b %Y").date()
+    except (TypeError, ValueError):
+        return None
+
+
 def composition(rows: list[dict], cases, corpus_path=None) -> dict:
     types = Counter(r.get("complaint_type") for r in rows)
     n = len(rows)
+    dates = sorted(d for d in (_as_date(r.get("date")) for r in rows) if d)
     return {
         "decisions_harvested": n,
-        "date_min": min((r["date"] for r in rows if r.get("date")), default=None),
-        "date_max": max((r["date"] for r in rows if r.get("date")), default=None),
+        "date_min": dates[0].isoformat() if dates else None,
+        "date_max": dates[-1].isoformat() if dates else None,
+        "dates_parsed": len(dates),
         "by_complaint_type": dict(types.most_common()),
         "not_about_a_claim": n - types.get(classify.CLAIM, 0),
         "not_about_a_claim_share": (n - types.get(classify.CLAIM, 0)) / n if n else 0,
@@ -58,7 +76,8 @@ def composition(rows: list[dict], cases, corpus_path=None) -> dict:
                        "not_upheld": sum(1 for c in cases if not c.upheld)},
         "by_respondent_top10": dict(Counter(c.business for c in cases).most_common(10)),
         "distinct_respondents": len({c.business for c in cases}),
-        "input_words_median": statistics.median(len(c.text.split()) for c in cases),
+        "input_words_median": (statistics.median(len(c.text.split()) for c in cases)
+                               if cases else None),
         "hash_check": verify_hashes(corpus_path) if corpus_path else verify_hashes(),
     }
 

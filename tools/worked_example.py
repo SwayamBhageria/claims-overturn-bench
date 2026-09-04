@@ -52,12 +52,21 @@ def markdown(x: dict) -> str:
     facts = " ".join(c["facts"].split())
     if len(facts) > 900:
         facts = facts[:900] + " […]"
-    verdict = ("The checker put this above the corpus base rate; the ombudsman "
-               "upheld it." if r["overturn_risk"] >= 0.5 and c["actual_outcome"] == "upheld"
-               else "The checker put this below the base rate; the ombudsman did "
-               "not uphold it." if r["overturn_risk"] < 0.5 and c["actual_outcome"] != "upheld"
-               else "**The checker was wrong on this one.** It is here anyway: "
-               "the case was picked by seed, not by outcome.")
+    risk, actual = r["overturn_risk"], c["actual_outcome"]
+    right = (risk >= 0.5) == (actual == "upheld")
+    if abs(risk - 0.5) < 0.05:
+        verdict = ("**That is a coin flip, and it is reported as one.** The risk sits "
+                   "within five points of even, which is the checker saying it "
+                   "cannot separate this case — exactly the kind that should reach "
+                   "a person. Landing on the right side of 0.5 here is not a "
+                   "result.")
+    elif right:
+        verdict = ("The checker put this on the correct side, and the precedents it "
+                   "cites are the reason it can be argued with.")
+    else:
+        verdict = ("**The checker was wrong on this one.** It is here anyway: the "
+                   "case is picked by seed, not by outcome. §4 is where the "
+                   "question of how often that happens is answered.")
 
     lines = [
         f"Held-out decision **{c['drn']}** ({c['product']}, {c['date']}), checked "

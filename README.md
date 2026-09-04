@@ -39,7 +39,19 @@ to be quite a lot.
 ## What the corpus is
 
 <!--AUTO:COMPOSITION-->
-*Run `python -m corpus.build` then `python -m bench.run`.*
+| | |
+|---|---:|
+| decisions harvested | 1,533 |
+| date range | 2024-01-08 – 2026-07-21 |
+| distinct respondent firms | 183 |
+| **not about a claim** (premium, mis-sale, cancellation) | **126  (8.2%)** |
+| benchmark cases (claim decisions only) | **1,349** |
+| upheld / not upheld | 626 / 723 |
+| median input length | 323 words |
+
+Complaint types: claim 1,407 · other 80 · pricing 26 · sales 10 · admin 10.
+
+Product lines: property 263 · unknown 241 · motor 220 · travel 177 · gadget 165 · pet 152 · health 57 · warranty 42 · commercial 21 · life 11.
 <!--/AUTO:COMPOSITION-->
 
 Not every published insurance decision is about a claim. Many are about a premium rise, a
@@ -77,7 +89,12 @@ opinion exists. It is removed from the input and kept aside, so the benchmark ca
 ways and the difference measured. It is measured below.
 
 <!--AUTO:LEAKAGE-->
-*Run `python -m bench.run`.*
+| | |
+|---|---:|
+| inputs checked for verdict wording | 1,349 |
+| inputs containing any | **0** |
+| carrying the adjudicator's provisional view | 1,294 (95.9%) |
+| cached PDFs matching their recorded SHA-256 | 1,533 / 1,533 (mismatches: 0) |
 <!--/AUTO:LEAKAGE-->
 
 ---
@@ -85,13 +102,34 @@ ways and the difference measured. It is measured below.
 ## 1. What the ombudsman actually faults
 
 <!--AUTO:GROUNDS-->
-*Run `python -m bench.run`.*
+| ground | family | upheld decisions | share of upheld |
+|---|---|---:|---:|
+| process | handling | 125 | 20.0% |
+| communication | handling | 121 | 19.3% |
+| quantum | handling | 70 | 11.2% |
+| misrepresentation | coverage | 47 | 7.5% |
+| delay | handling | 30 | 4.8% |
+| policy_wording | coverage | 16 | 2.6% |
+| evidence | handling | 10 | 1.6% |
+| fraud | coverage | 7 | 1.1% |
+| *(untagged)* | — | 307 | 49.0% |
+
+By family: untagged 307 · handling 250 · coverage 36 · both 33.
+
+**45.2% of all upheld decisions fault the handling** (283 of 626); 11.0% fault the coverage decision (69). The two overlap — a decision can be both.
+
+Read those against the untagged row, not past it. Of the 319 decisions the tagger does place, **88.7% fault the handling** and 21.6% the coverage decision. The 49.0% it places nowhere is the tagger's recall problem, not evidence of a third kind of fault, and it means these shares are a floor rather than an estimate.
 <!--/AUTO:GROUNDS-->
 
 Grounds are tagged by rules over the ombudsman's own reasoning, not by a model, so every tag
-traces to the sentence that produced it — `bench.grounds.explain()` returns exactly that. The
-tagger's accuracy against a hand-labelled sample is reported in
-`results/rule_validation.json`; see *Validating the rules* below.
+traces to the sentence that produced it — `bench.grounds.explain()` returns exactly that.
+
+**This layer is the least validated thing on the page and the untagged row says so.** The
+ombudsman writes findings in prose, and a decision that reasons its way to "this was unfair"
+without using any of the recurring formulas is counted as untagged rather than guessed at. Its
+precision has not been measured against hand labels; the harness for doing that is
+`bench/validate_rules.py` and it is the obvious next thing. The remedy split in the next section
+*has* been validated that way, and it is the one carrying a headline.
 
 ### The distinction the word "upheld" hides
 
@@ -100,7 +138,15 @@ have been paid. In the other the declinature **stands**, and the insurer loses a
 on evidence it never asked for, on an explanation nobody could follow.
 
 <!--AUTO:VALIDATION-->
-*Run `python -m bench.run`.*
+**28.6% of upheld claim complaints left the claim decision intact** (95% CI 21.7% – 36.5%, 140 decisions labelled by hand). The insurer's answer stood; it lost on how it got there.
+
+| | |
+|---|---:|
+| decisions hand-labelled | 140 |
+| claim decision changed | 100 (71.4%) |
+| claim decision stood | 40 (28.6%) |
+| rule accuracy, clean sample (n=40) | 85.0% |
+| rule precision / recall | 90.3% / 90.3% |
 <!--/AUTO:VALIDATION-->
 
 That distinction is the finding. The first kind is underwriting judgement and it is hard to
@@ -121,7 +167,16 @@ used to build them cannot test them.
 ## 2. What it costs
 
 <!--AUTO:COST-->
-*Run `python -m bench.run`.*
+| | |
+|---|---:|
+| upheld decisions awarding compensation | 422 (67.4% of upheld) |
+| median compensation | £200 |
+| mean compensation | £356 |
+| 90th percentile | £795 |
+| largest in corpus | £3,000 |
+| ombudsman case fee, 2026/27, payable either way | £680 |
+
+Compensation for the experience only. The claim settlement is not extracted: remedy sections name the settlement, the earlier offer, the valuation and the policy limit in adjacent sentences, and picking between them reliably is not something a rule does well. So this column is the **smaller half** of what an overturned decision costs.
 <!--/AUTO:COST-->
 
 The award is not the whole cost and is usually not the largest part of it. Reaching investigation
@@ -142,7 +197,20 @@ client whose policyholder it was. Only the first of those is on this page.
 ## 3. Can the overturned decisions be identified in advance?
 
 <!--AUTO:PREDICTION-->
-*Run `python -m bench.run`.*
+| model | split | accuracy | balanced acc. | recall on upheld | predicted-upheld rate |
+|---|---|---:|---:|---:|---:|
+| majority | grouped by respondent | 53.6% | 50.0% | 0.0% | 0.0% |
+| prior | grouped by respondent | 53.6% | 50.0% | 0.0% | 0.0% |
+| tfidf_lr | grouped by respondent | 68.9% | 68.7% | 64.9% | 44.8% |
+| precedent_knn | grouped by respondent | 66.6% | 66.6% | 66.0% | 48.2% |
+| precedent_lsa | grouped by respondent | 63.5% | 63.9% | 68.4% | 53.5% |
+| majority | random | 53.6% | 50.0% | 0.0% | 0.0% |
+| prior | random | 53.6% | 50.0% | 0.0% | 0.0% |
+| tfidf_lr | random | 68.9% | 68.8% | 67.4% | 47.3% |
+| precedent_knn | random | 65.6% | 65.5% | 64.1% | 47.4% |
+| precedent_lsa | random | 64.9% | 65.2% | 70.1% | 53.8% |
+
+Base rate (share upheld): **46.4%**.
 <!--/AUTO:PREDICTION-->
 
 Read that table by **balanced accuracy and recall on the upheld class**, not by accuracy. A
@@ -151,14 +219,28 @@ while being precisely the system that lets every wrong decline through; `majorit
 table to make that visible rather than arguable.
 
 **The split is grouped by respondent firm** — no insurer appears on both sides. Without that, a
-model learns "this firm's travel claims get upheld" from one half and cashes it in on the other,
-which scores well and has learned nothing about claims. The random split is reported alongside;
-the gap between them is a measurement of how much of this task is memorising defendants.
+model can learn "this firm's travel claims get upheld" from one half and cash it in on the other,
+which scores well and has learned nothing about claims. The random split is reported alongside so
+the gap between them measures how much of the task is memorising defendants.
+
+Here that gap is essentially nothing: 0.687 grouped against 0.688 random for the linear model,
+across 183 respondent firms. Whatever signal there is does not come from recognising the insurer,
+which is the result you want and not the one to assume. The terms the model leans on are printed
+in `results/analysis.json` under `top_upheld_terms`, and they are conduct words — offers,
+delays, interest — with one insurer's name among them.
 
 ### How much of it is agreeing with the adjudicator?
 
 <!--AUTO:INVESTIGATOR-->
-*Run `python -m bench.run`.*
+| model | without the adjudicator's view | with it | change |
+|---|---:|---:|---:|
+| majority | 50.0% | 50.0% | +0.0 pts |
+| prior | 50.0% | 50.0% | +0.0 pts |
+| tfidf_lr | 68.1% | 76.1% | +8.0 pts |
+| precedent_knn | 64.9% | 68.3% | +3.4 pts |
+| precedent_lsa | 63.9% | 66.5% | +2.6 pts |
+
+Run on the 1,294 cases that carry one (95.9% of the benchmark). Balanced accuracy, grouped split.
 <!--/AUTO:INVESTIGATOR-->
 
 ---
@@ -169,7 +251,18 @@ Nobody is proposing to automate the final call. The deployable question is triag
 the book can a system take, at what accuracy, and how many overturns does it still miss?
 
 <!--AUTO:TRIAGE-->
-*Run `python -m bench.run`.*
+| coverage | cases automated | accuracy | recall on upheld | overturns missed in the automated portion |
+|---:|---:|---:|---:|---:|
+| 10% | 135 | 83.7% | 77.9% | 15 |
+| 20% | 270 | 77.8% | 69.1% | 42 |
+| 30% | 405 | 76.5% | 67.4% | 62 |
+| 40% | 540 | 75.0% | 69.6% | 77 |
+| 50% | 674 | 74.2% | 70.7% | 93 |
+| 60% | 809 | 71.6% | 68.4% | 119 |
+| 70% | 944 | 69.6% | 66.9% | 147 |
+| 80% | 1,079 | 68.5% | 66.7% | 169 |
+| 90% | 1,214 | 67.6% | 66.5% | 190 |
+| 100% | 1,349 | 66.6% | 66.0% | 213 |
 <!--/AUTO:TRIAGE-->
 
 Cases are ranked by confidence and the least confident are handed to a human first. The last
@@ -184,7 +277,20 @@ its class balance a choice we made, not an estimate of anything. So the rates co
 somewhere else: the search's own result totals, one request per outcome.
 
 <!--AUTO:PRODUCTS-->
-*Run `python -m bench.rates`.*
+| search phrase | published decisions | upheld | rate | 95% CI |
+|---|---:|---:|---:|---|
+| `warranty claim` | 1,629 | 857 | 52.6% | 50.2% – 55.0% |
+| `buildings insurance claim` | 3,561 | 1,654 | 46.4% | 44.8% – 48.1% |
+| `contents insurance claim` | 7,750 | 3,569 | 46.1% | 44.9% – 47.2% |
+| `motor insurance claim` | 4,885 | 2,173 | 44.5% | 43.1% – 45.9% |
+| `travel insurance claim` | 2,466 | 1,074 | 43.6% | 41.6% – 45.5% |
+| `pet insurance claim` | 856 | 372 | 43.5% | 40.2% – 46.8% |
+| `home insurance claim` | 6,974 | 2,992 | 42.9% | 41.7% – 44.1% |
+| `declined the claim` | 18,736 | 7,701 | 41.1% | 40.4% – 41.8% |
+| `mobile phone insurance claim` | 551 | 223 | 40.5% | 36.5% – 44.6% |
+| `gadget insurance claim` | 158 | 60 | 38.0% | 30.8% – 45.7% |
+
+Over 2024-01-01 – 2026-08-31. These are rates over **decisions matching a full-text phrase**, not over products and not over claims: the search has no product field, and a published decision is the tail of complaints that reached an ombudsman.
 <!--/AUTO:PRODUCTS-->
 
 ---
@@ -204,7 +310,39 @@ those precedents turned on, and a checklist drawn from them.
 ### A worked example
 
 <!--AUTO:EXAMPLE-->
-*Run `python -m tools.worked_example`.*
+Held-out decision **DRN-5872505** (pet, 10 Nov 2025), checked against the other 1,348 cases. The facts, as a handler would have held them:
+
+> The complaint Mr F complains that INTACT INSURANCE UK LIMITED has unfairly declined a claim under his pet insurance policy. Where I refer to Intact, this includes the actions of its agents and claims handlers for which it takes responsibility. What happened The detailed background to this complaint is well known to both parties, so I'll only summarise the key events here. • Mr F holds a pet insurance policy for his dog, underwritten by Intact and effective from 10 January 2025. • In March 2025, Mr F called Intact to see if he'd be covered for the cost to remove a skin tag. He was advised that as long as the tag hadn't been noted before the policy started, it would be covered. As Mr F believed it hadn't, he proceeded with the operation and made a claim. • Intact declined the claim on the basis the skin tag was a pre-existing condition because it was first noted in a vet appointment in Aug […]
+
+```
+overturn risk        51%
+nearest precedents   6 (3 upheld), mean similarity 0.24
+
+grounds carried by the upheld precedents
+    3x  process            (handling)
+    1x  misrepresentation  (coverage)
+
+before sending this decision, check
+  [ ] Has the claim been assessed under every section of cover that could respond, not just the one it was reported under?
+  [ ] If this turns on a misrepresentation: is it a qualifying one under CIDRA, and is it careless rather than deliberate? The remedy differs.
+  [ ] ICOBS 8.1: is this claim being handled promptly and fairly, and is the declinature reasonable on the evidence held?
+
+precedents
+  UPHELD     0.26  DRN-5598267  27 Jun 2025  HDI Global Specialty SE
+             https://www.financial-ombudsman.org.uk/decision/DRN-5598267.pdf
+  UPHELD     0.24  DRN-6261005  30 Mar 2026  Financial & Legal Insurance Company Ltd
+             https://www.financial-ombudsman.org.uk/decision/DRN-6261005.pdf
+  not upheld 0.24  DRN-6404120   5 Jun 2026  Red Sands Insurance Company (Europe) Limited
+             https://www.financial-ombudsman.org.uk/decision/DRN-6404120.pdf
+  not upheld 0.23  DRN-5742293  12 Dec 2025  INTACT INSURANCE UK LIMITED
+             https://www.financial-ombudsman.org.uk/decision/DRN-5742293.pdf
+  not upheld 0.23  DRN-5521061  23 Jun 2025  AmTrust Specialty Limited
+             https://www.financial-ombudsman.org.uk/decision/DRN-5521061.pdf
+  UPHELD     0.23  DRN-6436948   2 Jul 2026  Admiral Insurance (Gibraltar) Limited
+             https://www.financial-ombudsman.org.uk/decision/DRN-6436948.pdf
+```
+
+The ombudsman **upheld** this complaint ([DRN-5872505](https://www.financial-ombudsman.org.uk/decision/DRN-5872505.pdf)). **That is a coin flip, and it is reported as one.** The risk sits within five points of even, which is the checker saying it cannot separate this case — exactly the kind that should reach a person. Landing on the right side of 0.5 here is not a result.
 <!--/AUTO:EXAMPLE-->
 
 The retrieval model wears the interface even where a classifier scores higher, and that is
@@ -222,7 +360,7 @@ anything, and §4 says plainly what fraction of cases a system of this kind can 
 
 ```bash
 pip install -r requirements.txt
-python -m corpus.build      # ~30 min: searches, fetches and parses the decisions
+python -m corpus.build      # ~65 min: searches, fetches and parses the decisions
 python -m bench.rates       # ~1 min: uphold rates from search totals
 python -m bench.run         # writes results/analysis.json
 python -m bench.report      # rewrites every table above from that file
@@ -240,13 +378,20 @@ python -m tools.verify_corpus
 ```
 
 The harvester respects `robots.txt` (checked 2026-09-04: it disallows four PDF forms and permits
-the rest) and runs one request per second.
+the rest) and sleeps a second between requests, which works out at roughly one decision every
+two and a half seconds including the site's own latency.
 
 ### Validating the rules
 
-Two layers here are rules rather than models — the complaint-type classifier and the ground
-tagger — because every number they produce has to be checkable by hand. That does not make them
-correct, so they are scored:
+Three layers here are rules rather than models — the complaint-type classifier, the ground
+tagger, and the remedy split — because every number they produce has to be checkable by hand.
+That does not make them correct, so they get scored against hand labels.
+
+The remedy split carries the headline and has been done: `results/remedy_validation.json` holds
+140 decisions labelled by reading their operative directions, in three samples, with only the
+last of the three used to report accuracy. The other two built the rules and cannot test them.
+
+For the ground tagger:
 
 ```bash
 python -m bench.validate_rules --sample 60 --out data/labels_sample.json   # blank sheet
@@ -254,7 +399,8 @@ python -m bench.validate_rules --sample 60 --out data/labels_sample.json   # bla
 python -m bench.validate_rules --score data/labels.json
 ```
 
-Per-ground precision and recall land in `results/rule_validation.json`.
+Per-ground precision and recall land in `results/rule_validation.json`. `--score` refuses a
+partly-filled sheet, because scoring one measures the rules on whichever cases were easy.
 
 ---
 

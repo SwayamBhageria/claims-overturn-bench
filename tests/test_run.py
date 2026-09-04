@@ -129,3 +129,22 @@ def test_product_mix_is_not_presented_as_a_rate(cases):
     for v in mix.values():
         assert "rate" not in v
         assert v["note"] == "sampled, not a rate"
+
+
+def test_date_range_is_parsed_not_sorted_as_text():
+    """min()/max() over "9 May 2025" strings sorts alphabetically. The real
+    corpus reported a 2024-2026 harvest as running Dec 2024 to May 2025."""
+    rows = [{"complaint_type": "claim", "date": d} for d in
+            ["1 Dec 2024", "9 May 2025", "15 Jan 2024", "3 Aug 2026"]]
+    comp = run.composition(rows, [], None)
+    assert comp["date_min"] == "2024-01-15"
+    assert comp["date_max"] == "2026-08-03"
+    assert comp["dates_parsed"] == 4
+
+
+def test_unparseable_dates_are_skipped_not_crashed_on():
+    rows = [{"complaint_type": "claim", "date": d} for d in
+            ["1 Dec 2024", None, "not a date"]]
+    comp = run.composition(rows, [], None)
+    assert comp["dates_parsed"] == 1
+    assert comp["date_min"] == "2024-12-01"

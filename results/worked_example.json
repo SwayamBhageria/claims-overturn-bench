@@ -1,0 +1,94 @@
+{
+  "seed": 0,
+  "case": {
+    "drn": "DRN-5872505",
+    "date": "10 Nov 2025",
+    "business": "INTACT INSURANCE UK LIMITED",
+    "product": "pet",
+    "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5872505.pdf",
+    "actual_outcome": "upheld",
+    "facts": "The complaint\nMr F complains that INTACT INSURANCE UK LIMITED has unfairly declined a claim under \nhis pet insurance policy. \n \nWhere I refer to Intact, this includes the actions of its agents and claims handlers for which it \ntakes responsibility.\n\nWhat happened\nThe detailed background to this complaint is well known to both parties, so I'll only summarise the key events here. \u2022 Mr F holds a pet insurance policy for his dog, underwritten by Intact and effective from 10 January 2025. \u2022 In March 2025, Mr F called Intact to see if he'd be covered for the cost to remove a skin tag. He was advised that as long as the tag hadn't been noted before the policy started, it would be covered. As Mr F believed it hadn't, he proceeded with the operation and made a claim. \u2022 Intact declined the claim on the basis the skin tag was a pre-existing condition because it was first noted in a vet appointment in August 2024. \u2022 Mr F raised a complaint which he brought to our Service. He said that whilst the skin tag was noted before the start of the policy, he was assured by the vet that it was nothing to worry about and no treatment was required. And Intact should've asked him to send the medical history before agreeing to the surgery. She accepted the skin tag was present prior to the policy, but she didn't think Mr F knew \u2013 or ought reasonably to have known \u2013 there was something wrong that was likely to lead to investigation / treatment which is our approach to pre-existing conditions. \u2022 Intact didn't accept this outcome. It said whilst the treating vet advised to monitor the skin tag rather than treat it immediately, the recommendation suggests there was at least some degree of clinical concern, and it indicates the lesion was already under observation at the time the policy began."
+  },
+  "report": {
+    "overturn_risk": 0.5103,
+    "n_precedents": 6,
+    "upheld_among_precedents": 3,
+    "mean_similarity": 0.2379,
+    "weak_match": false,
+    "weak_threshold": 0.1296,
+    "precedents": [
+      {
+        "drn": "DRN-5598267",
+        "date": "27 Jun 2025",
+        "business": "HDI Global Specialty SE",
+        "upheld": true,
+        "similarity": 0.2592,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5598267.pdf",
+        "grounds": [
+          "process"
+        ]
+      },
+      {
+        "drn": "DRN-6261005",
+        "date": "30 Mar 2026",
+        "business": "Financial & Legal Insurance Company Ltd",
+        "upheld": true,
+        "similarity": 0.2429,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-6261005.pdf",
+        "grounds": [
+          "process"
+        ]
+      },
+      {
+        "drn": "DRN-6404120",
+        "date": "5 Jun 2026",
+        "business": "Red Sands Insurance Company (Europe) Limited",
+        "upheld": false,
+        "similarity": 0.2362,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-6404120.pdf",
+        "grounds": []
+      },
+      {
+        "drn": "DRN-5742293",
+        "date": "12 Dec 2025",
+        "business": "INTACT INSURANCE UK LIMITED",
+        "upheld": false,
+        "similarity": 0.2323,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5742293.pdf",
+        "grounds": []
+      },
+      {
+        "drn": "DRN-5521061",
+        "date": "23 Jun 2025",
+        "business": "AmTrust Specialty Limited",
+        "upheld": false,
+        "similarity": 0.2303,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5521061.pdf",
+        "grounds": []
+      },
+      {
+        "drn": "DRN-6436948",
+        "date": "2 Jul 2026",
+        "business": "Admiral Insurance (Gibraltar) Limited",
+        "upheld": true,
+        "similarity": 0.2262,
+        "url": "https://www.financial-ombudsman.org.uk/decision/DRN-6436948.pdf",
+        "grounds": [
+          "misrepresentation",
+          "process"
+        ]
+      }
+    ],
+    "grounds_seen": {
+      "process": 3,
+      "misrepresentation": 1
+    },
+    "checks": [
+      "Has the claim been assessed under every section of cover that could respond, not just the one it was reported under?",
+      "If this turns on a misrepresentation: is it a qualifying one under CIDRA, and is it careless rather than deliberate? The remedy differs.",
+      "ICOBS 8.1: is this claim being handled promptly and fairly, and is the declinature reasonable on the evidence held?"
+    ]
+  },
+  "render": "overturn risk        51%\nnearest precedents   6 (3 upheld), mean similarity 0.24\n\ngrounds carried by the upheld precedents\n    3x  process            (handling)\n    1x  misrepresentation  (coverage)\n\nbefore sending this decision, check\n  [ ] Has the claim been assessed under every section of cover that could respond, not just the one it was reported under?\n  [ ] If this turns on a misrepresentation: is it a qualifying one under CIDRA, and is it careless rather than deliberate? The remedy differs.\n  [ ] ICOBS 8.1: is this claim being handled promptly and fairly, and is the declinature reasonable on the evidence held?\n\nprecedents\n  UPHELD     0.26  DRN-5598267  27 Jun 2025  HDI Global Specialty SE\n             https://www.financial-ombudsman.org.uk/decision/DRN-5598267.pdf\n  UPHELD     0.24  DRN-6261005  30 Mar 2026  Financial & Legal Insurance Company Ltd\n             https://www.financial-ombudsman.org.uk/decision/DRN-6261005.pdf\n  not upheld 0.24  DRN-6404120   5 Jun 2026  Red Sands Insurance Company (Europe) Limited\n             https://www.financial-ombudsman.org.uk/decision/DRN-6404120.pdf\n  not upheld 0.23  DRN-5742293  12 Dec 2025  INTACT INSURANCE UK LIMITED\n             https://www.financial-ombudsman.org.uk/decision/DRN-5742293.pdf\n  not upheld 0.23  DRN-5521061  23 Jun 2025  AmTrust Specialty Limited\n             https://www.financial-ombudsman.org.uk/decision/DRN-5521061.pdf\n  UPHELD     0.23  DRN-6436948   2 Jul 2026  Admiral Insurance (Gibraltar) Limited\n             https://www.financial-ombudsman.org.uk/decision/DRN-6436948.pdf",
+  "index_size": 1348
+}

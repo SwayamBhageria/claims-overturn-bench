@@ -57,12 +57,20 @@ def block_grounds(a: dict) -> str:
                  f"{_pct(g['untagged'] / g['upheld_cases'])} |")
     fam = g["families"]
     summary = " · ".join(f"{k} {v:,}" for k, v in fam.items())
+    tagged = g["upheld_cases"] - g["untagged"]
     return ("\n".join(lines) +
             f"\n\nBy family: {summary}."
-            f"\n\n**{_pct(g['handling_touched_share'])} of upheld decisions fault the "
+            f"\n\n**{_pct(g['handling_touched_share'])} of all upheld decisions fault the "
             f"handling** ({g['handling_touched']:,} of {g['upheld_cases']:,}); "
             f"{_pct(g['coverage_touched_share'])} fault the coverage decision "
-            f"({g['coverage_touched']:,}). The two overlap: a decision can be both.")
+            f"({g['coverage_touched']:,}). The two overlap — a decision can be both.\n\n"
+            f"Read those against the untagged row, not past it. Of the {tagged:,} "
+            f"decisions the tagger does place, "
+            f"**{_pct(g['handling_touched'] / tagged)} fault the handling** and "
+            f"{_pct(g['coverage_touched'] / tagged)} the coverage decision. The "
+            f"{_pct(g['untagged'] / g['upheld_cases'])} it places nowhere is the "
+            f"tagger's recall problem, not evidence of a third kind of fault, and "
+            f"it means these shares are a floor rather than an estimate.")
 
 
 def block_prediction(a: dict) -> str:
