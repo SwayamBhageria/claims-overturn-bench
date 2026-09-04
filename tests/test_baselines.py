@@ -87,3 +87,49 @@ def test_grouped_folds_never_emit_an_empty_fold():
 def test_grouped_folds_refuse_a_single_group():
     with pytest.raises(ValueError, match="at least two"):
         baselines.grouped_folds(["only"] * 20, n_splits=5)
+
+
+def test_text_cache_reextracts_when_the_pdf_changes(tmp_path, monkeypatch):
+    """A re-fetched decision must not be served from a stale text cache."""
+    from bench import dataset
+
+    monkeypatch.setattr(dataset, "TEXT_CACHE", tmp_path / "text")
+    pdf = tmp_path / "DRN-1.pdf"
+    pdf.write_bytes(b"%PDF-fake")
+
+    calls = []
+
+    def fake_extract(path):
+        calls.append(str(path))
+        return f"extraction {len(calls)}"
+
+    monkeypatch.setattr(dataset.sections, "extract_text", fake_extract)
+
+    assert dataset._text_for(pdf, "DRN-1") == "extraction 1"
+    assert dataset._text_for(pdf, "DRN-1") == "extraction 1"   # cached
+    assert len(calls) == 1
+
+    import os
+    os.utime(pdf, (0, 0))                                       # "re-fetched"
+    assert dataset._text_for(pdf, "DRN-1") == "extraction 2"
+    assert len(calls) == 2
+    # and the stale entry is gone rather than accumulating
+    assert len(list((tmp_path / "text").glob("DRN-1.*.txt"))) == 1
+
+
+def test_lsa_retriever_never_returns_a_negative_similarity():
+    """A negative weight would subtract a precedent's outcome from the risk."""
+    texts = ["travel medical evidence delay"] * 10 + ["motor exclusion applied"] * 10
+    y = [True] * 10 + [False] * 10
+    m = baselines.PrecedentLSA(k=5).fit(texts, y)
+    for _idx, sim, _up in m.neighbours("something entirely unrelated"):
+        assert sim >= 0.0
+    p = m.predict_proba(["travel medical evidence delay"])[0]
+    assert 0.0 <= p <= 1.0
+
+
+def test_lsa_survives_a_corpus_smaller_than_its_component_count():
+    texts = ["travel evidence"] * 3 + ["motor exclusion"] * 3
+    y = [True] * 3 + [False] * 3
+    m = baselines.PrecedentLSA(k=2, components=200).fit(texts, y)
+    assert 0.0 <= m.predict_proba(["travel evidence"])[0] <= 1.0

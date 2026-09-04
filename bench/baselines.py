@@ -139,7 +139,56 @@ class PrecedentKNN(Baseline):
         return [(int(i), float(sims[0, i]), bool(self.y[i])) for i in idx[0]]
 
 
-ALL = [Majority, Prior, TfidfLR, PrecedentKNN]
+class PrecedentLSA(PrecedentKNN):
+    """`PrecedentKNN` over a reduced space instead of raw terms.
+
+    Lexical similarity has an obvious failure here: two decisions about the
+    same conduct can share almost no vocabulary, because one says "we never
+    received the medical report" and the other says "the treating clinician's
+    letter was not obtained". Truncated SVD over the same TF-IDF matrix folds
+    those onto nearby axes.
+
+    It is a separate model rather than a replacement because the reduction can
+    also destroy the distinctions that matter — "did not obtain the evidence"
+    and "obtained the evidence" are neighbours in almost any embedding — so
+    which one is better is a question for the corpus, not for taste. Both are
+    in the results table.
+    """
+    name = "precedent_lsa"
+
+    def __init__(self, k: int = 15, max_features: int = 40_000,
+                 components: int = 200):
+        super().__init__(k=k, max_features=max_features)
+        self.components = components
+
+    def fit(self, texts, y):
+        from sklearn.decomposition import TruncatedSVD
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import Normalizer
+
+        raw = self.vec.fit_transform(texts)
+        # Components cannot exceed the rank of the matrix; a small fold would
+        # otherwise raise from inside sklearn rather than here.
+        n = min(self.components, min(raw.shape) - 1)
+        self.svd = make_pipeline(TruncatedSVD(n_components=max(n, 2),
+                                              random_state=0),
+                                 Normalizer(copy=False))
+        self.X = self.svd.fit_transform(raw)
+        self.y = np.asarray(y, dtype=float)
+        self.texts = texts
+        return self
+
+    def _neighbours(self, texts: list[str]):
+        q = self.svd.transform(self.vec.transform(texts))
+        sims = cosine_similarity(q, self.X)
+        # SVD similarities can be negative; a negative weight would subtract a
+        # precedent's outcome from the risk, which is meaningless.
+        sims = np.clip(sims, 0.0, None)
+        idx = np.argsort(sims, axis=1)[:, ::-1][:, :self.k]
+        return sims, idx
+
+
+ALL = [Majority, Prior, TfidfLR, PrecedentKNN, PrecedentLSA]
 
 
 def grouped_folds(groups: list[str], n_splits: int = 5, seed: int = 0

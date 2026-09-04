@@ -45,8 +45,15 @@ def make_sheet(n: int, seed: int, out: Path) -> None:
             ". Leave [] if none apply. Do not consult the tagger first."),
         "grounds_available": sorted(grounds.GROUNDS),
         "seed": seed,
+        "instructions_remedy": (
+            "Also answer `claim_affected`: true if the ombudsman's operative "
+            "directions change what happens to the CLAIM (accept it, pay it, "
+            "settle it, increase it, reimburse a cost, reconsider it); false "
+            "if the only direction is compensation for the experience."),
         "cases": [{"drn": c.drn, "url": c.url, "product": c.product,
-                   "reasoning": c.reasoning, "grounds": None} for c in sample],
+                   "reasoning": c.reasoning,
+                   "remedy": grounds.remedy_text(c.reasoning, c.outcome_text),
+                   "grounds": None, "claim_affected": None} for c in sample],
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(sheet, indent=2))
@@ -56,7 +63,8 @@ def make_sheet(n: int, seed: int, out: Path) -> None:
 def score_sheet(path: Path) -> dict:
     sheet = json.loads(path.read_text())
     cases = sheet["cases"]
-    unlabelled = [c["drn"] for c in cases if c.get("grounds") is None]
+    unlabelled = [c["drn"] for c in cases
+                  if c.get("grounds") is None or c.get("claim_affected") is None]
     if unlabelled:
         raise SystemExit(
             f"{len(unlabelled)} of {len(cases)} rows are unlabelled "
@@ -93,6 +101,30 @@ def score_sheet(path: Path) -> dict:
         gold_fams[gf] = gold_fams.get(gf, 0) + 1
         pred_fams[pf] = pred_fams.get(pf, 0) + 1
 
+    # The remedy split is the headline, so it is scored explicitly rather
+    # than inheriting confidence from the ground tagger's numbers.
+    r_tp = r_fp = r_tn = r_fn = 0
+    for c in cases:
+        pred = grounds.claim_decision_disturbed(c.get("remedy", ""))
+        gold = bool(c["claim_affected"])
+        if pred and gold:
+            r_tp += 1
+        elif pred:
+            r_fp += 1
+        elif gold:
+            r_fn += 1
+        else:
+            r_tn += 1
+    remedy = {
+        "tp": r_tp, "fp": r_fp, "tn": r_tn, "fn": r_fn,
+        "accuracy": (r_tp + r_tn) / len(cases),
+        "precision": r_tp / (r_tp + r_fp) if (r_tp + r_fp) else None,
+        "recall": r_tp / (r_tp + r_fn) if (r_tp + r_fn) else None,
+        "hand_labelled_disturbed_share": sum(
+            1 for c in cases if c["claim_affected"]) / len(cases),
+        "rule_disturbed_share": (r_tp + r_fp) / len(cases),
+    }
+
     micro_tp = sum(v["tp"] for v in per_ground.values())
     micro_fp = sum(v["fp"] for v in per_ground.values())
     micro_fn = sum(v["fn"] for v in per_ground.values())
@@ -105,6 +137,7 @@ def score_sheet(path: Path) -> dict:
         "family_agreement": fam_agree / len(cases),
         "family_counts_hand": gold_fams,
         "family_counts_rules": pred_fams,
+        "remedy_split": remedy,
     }
 
 

@@ -88,11 +88,59 @@ def test_remedy_that_leaves_the_claim_outcome_alone():
     remedy = ("Example acted fairly in declining the claim. However it must pay "
               "£300 for the distress and inconvenience caused by the delay.")
     assert not grounds.claim_decision_disturbed(remedy)
-    assert grounds.distress_only(remedy)
+    assert grounds.compensation_only(remedy)
 
 
-def test_distress_only_is_false_when_the_claim_is_also_paid():
+def test_compensation_only_is_false_when_the_claim_is_also_paid():
     remedy = ("Example must pay the claim and a further £300 for the distress "
               "and inconvenience caused.")
     assert grounds.claim_decision_disturbed(remedy)
-    assert not grounds.distress_only(remedy)
+    assert not grounds.compensation_only(remedy)
+
+
+# Remedy wordings taken verbatim from published decisions, including every one
+# an earlier version of `claim_decision_disturbed` got wrong. Auditing the
+# cases it called "the claim stood" is what produced this list, and the share
+# it reported before the fix was wrong by roughly a factor of two.
+REAL_REMEDIES = [
+    ("Domestic and General Insurance PLC to: Settle Mr S' claims under the "
+     "remaining policy terms, less any excess payable.", True),          # DRN-4536448
+    ("Amtrust Europe Limited to accept the claim and repair the laptop. Pay "
+     "Ms G and Mr G £100 compensation for the trouble and upset caused.", True),  # DRN-4553239
+    ("Increase the cash settlement to £355", True),                      # DRN-4544487
+    ("Red Sands should pay Mr W's claim for his pet's treatment made during "
+     "the policy period, subject to the remaining policy terms.", True),  # DRN-4686053
+    ("To pay the outstanding balance of her vet's invoice for her dog's "
+     "treatment up to the policy limit of £3,000.", True),               # DRN-4727954
+    ("I direct IPA to pay Mrs W £300 compensation for distress and "
+     "inconvenience.", False),                                           # DRN-4594392
+    ("direct Liverpool Victoria Insurance Company Limited to pay a total of "
+     "£450 compensation, if they haven't already done so.", False),      # DRN-4648437
+    ("UKI should pay Ms C a total of £550 for distress and inconvenience.", False),  # DRN-4670932
+]
+
+
+def test_remedy_classifier_on_real_wordings():
+    for remedy, expected in REAL_REMEDIES:
+        assert grounds.claim_decision_disturbed(remedy) is expected, remedy[:70]
+
+
+def test_a_bare_mention_of_the_claim_is_not_a_direction_about_it():
+    # "\\w+'s? claims?" once matched "the claim", which made almost every
+    # remedy look claim-affecting and inflated the headline split.
+    assert not grounds.claim_decision_disturbed(
+        "Example acted fairly in declining the claim. However it must pay "
+        "£300 for the distress and inconvenience caused by the delay.")
+
+
+def test_remedy_text_starts_at_the_operative_directions():
+    reasoning = "Long discursive reasoning about the policy wording."
+    outcome = "Putting things right Example must accept the claim."
+    assert grounds.remedy_text(reasoning, outcome).startswith("Putting things right")
+
+
+def test_remedy_text_falls_back_to_the_whole_decision():
+    # A decision whose directions cannot be located should be read in full,
+    # not scored on an empty string.
+    assert grounds.remedy_text("reasoning", "no heading here") == \
+        "reasoning\nno heading here"

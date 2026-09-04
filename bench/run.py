@@ -97,8 +97,9 @@ def grounds_analysis(cases) -> dict:
             by_product[prod] = grounds.distribution(sub)
 
     # "Upheld" is two different events. Separating them is the point.
-    disturbed = sum(1 for c in upheld
-                    if grounds.claim_decision_disturbed(c.reasoning + "\n" + c.outcome_text))
+    remedies = [grounds.remedy_text(c.reasoning, c.outcome_text) for c in upheld]
+    disturbed = sum(1 for r in remedies if grounds.claim_decision_disturbed(r))
+    compensation_only = sum(1 for r in remedies if grounds.compensation_only(r))
     stood = n - disturbed
 
     return {
@@ -106,6 +107,7 @@ def grounds_analysis(cases) -> dict:
         "claim_decision_disturbed": disturbed,
         "claim_decision_stood": stood,
         "claim_decision_stood_share": stood / n if n else 0,
+        "compensation_only": compensation_only,
         **dist,
         "families": dict(fams.most_common()),
         "handling_touched": handling_touched,
@@ -123,7 +125,7 @@ def cost(cases) -> dict:
     for c in cases:
         if not c.upheld:
             continue
-        sums = grounds.awards(c.reasoning + "\n" + c.outcome_text)
+        sums = grounds.awards(grounds.remedy_text(c.reasoning, c.outcome_text))
         if sums:
             per_case.append(max(sums))
     if not per_case:
@@ -259,7 +261,7 @@ def investigator_ablation(cases) -> dict:
 def triage(pred: dict) -> dict:
     y = pred["_grouped_y"]
     out = {}
-    for name in ("tfidf_lr", "precedent_knn"):
+    for name in ("tfidf_lr", "precedent_knn", "precedent_lsa"):
         probs = pred["_grouped_probs"][name]
         out[name] = {
             "curve": metrics.abstention_curve(y, probs, steps=10),

@@ -92,7 +92,8 @@ def test_prediction_runs_both_splits_and_beats_majority(cases):
     p = run.prediction(cases)
     for key in ("grouped_by_respondent", "random_split"):
         scores = p[key]["scores"]
-        assert set(scores) == {"majority", "prior", "tfidf_lr", "precedent_knn"}
+        assert set(scores) == {"majority", "prior", "tfidf_lr",
+                               "precedent_knn", "precedent_lsa"}
         # Majority sits near chance on balanced accuracy however good its plain
         # accuracy looks — that is the whole reason it is in the table. It is
         # not pinned to exactly 0.5: pooled across folds whose training

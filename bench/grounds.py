@@ -67,39 +67,53 @@ GROUNDS: dict[str, tuple[str, list[str]]] = {
         r"\bCIFAS\b[^.]{0,80}\b(?:remove|unfair)\b",
     ]),
     "evidence": (HANDLING, [
-        r"\b(?:didn't|did not|failed to|hasn't|haven't) (?:obtain|request|seek|gather|get)\b[^.]{0,60}\b(?:evidence|report|information|medical|records)\b",
+        r"\b(?:didn't|did not|failed to|hasn't|haven't) (?:obtain|request|seek|gather|get|commission|arrange)\b[^.]{0,70}\b(?:evidence|report|information|medical|records|inspection|survey)\b",
         # The noun list is deliberately loose: an earlier version listed
         # "photos" and missed every decision that said "photographs".
-        r"\b(?:didn't|did not|failed to) (?:properly )?(?:consider|take into account|address|review|look at)\b[^.]{0,60}\b(?:evidence|report\w*|information|photo\w*|record\w*|statement\w*|invoice\w*|receipt\w*)\b",
-        r"\b(?:no|insufficient|inadequate) (?:evidence|basis) (?:to|for)\b[^.]{0,50}\b(?:decline|reject|refus\w+)\b",
-        r"\breport (?:was|is) (?:inadequate|insufficient|not sufficient|flawed)\b",
-        r"\bshould have (?:obtained|sought|asked for|arranged)\b",
+        r"\b(?:didn't|did not|failed to) (?:properly |fully )?(?:consider|take into account|address|review|look at|engage with)\b[^.]{0,70}\b(?:evidence|report\w*|information|photo\w*|record\w*|statement\w*|invoice\w*|receipt\w*|testimony)\b",
+        r"\b(?:no|insufficient|inadequate|not enough) (?:evidence|basis|grounds) (?:to|for)\b[^.]{0,60}\b(?:decline|reject|refus\w+|repudiat\w+|void\w*)\b",
+        r"\b(?:report|inspection|survey|assessment) (?:was|is|were)\b[^.]{0,60}\b(?:inadequate|insufficient|not sufficient|flawed|limited|incomplete|unreliable)\b",
+        r"\bshould have (?:obtained|sought|asked for|arranged|commissioned|investigated|checked)\b",
+        r"\b(?:didn't|did not|hasn't|haven't) (?:show|prove|demonstrate|establish)\b[^.]{0,60}\b(?:entitled to|the claim|it was)\b",
+        r"\bburden (?:of proof|is on)\b[^.]{0,60}\b(?:insurer|it|them)\b",
     ]),
     "delay": (HANDLING, [
-        r"\b(?:unnecessary|avoidable|unreasonable|significant|considerable) delay\b",
-        r"\bdelay(?:s|ed)?\b[^.]{0,60}\b(?:unreasonab\w+|unnecessar\w+|too long|avoidable)\b",
-        r"\btook (?:far )?too long\b",
-        r"\bshould have (?:been )?(?:dealt with|settled|resolved|progressed)[^.]{0,40}\b(?:sooner|quicker|faster|earlier)\b",
+        r"\b(?:unnecessary|avoidable|unreasonable|significant|considerable|lengthy|undue) delay\b",
+        r"\bdelay(?:s|ed|ing)?\b[^.]{0,70}\b(?:unreasonab\w+|unnecessar\w+|too long|avoidable|not acceptable)\b",
+        r"\btook (?:far |much )?too long\b",
+        r"\bshould have (?:been )?(?:dealt with|settled|resolved|progressed|paid|actioned)\b[^.]{0,50}\b(?:sooner|quicker|faster|earlier|promptly|more quickly)\b",
+        r"\b(?:months|weeks) (?:went by|passed)\b|\bstill (?:not|hasn't been) (?:resolved|settled|paid)\b",
     ]),
     "communication": (HANDLING, [
-        r"\b(?:poor|inadequate|unclear|misleading) (?:communication|service|information)\b",
-        r"\b(?:didn't|did not|failed to) (?:explain|tell|inform|update|keep)\b[^.]{0,60}\b(?:him|her|them|informed|updated)\b",
-        r"\bhad to chase\b|\bchasing\b",
-        r"\bgave (?:him|her|them) (?:incorrect|wrong|misleading)\b",
-        r"\bdistress and inconvenience\b",
+        # NOT "distress and inconvenience": that is the remedy attached to most
+        # upheld decisions whatever the ground, and including it made this the
+        # largest category by measuring the award rather than the fault.
+        r"\b(?:poor|inadequate|unclear|misleading|confusing) (?:communication|service|information|explanation)\b",
+        r"\b(?:didn't|did not|failed to|should have) (?:explain|tell|inform|update|direct|make clear|set out|warn)\b",
+        r"\bhad to chase\b|\bchasing\b|\bchased\b",
+        r"\bgave (?:him|her|them|it) (?:incorrect|wrong|misleading|conflicting)\b",
+        r"\b(?:could|should) have (?:directed|pointed|signposted|told)\b",
+        r"\bwasn't made (?:clear|aware)\b|\bwas not made (?:clear|aware)\b",
+        r"\bconflicting information\b",
     ]),
     "quantum": (HANDLING, [
-        r"\b(?:settlement|offer|payment) (?:was|is) (?:too low|unfair|insufficient|not fair)\b",
-        r"\b(?:unfair|incorrect|wrong) (?:deduction|depreciation|betterment|excess)\b",
-        r"\bmarket value\b[^.]{0,60}\b(?:too low|understated|unfair)\b",
-        r"\bshould (?:pay|settle|increase)\b[^.]{0,60}\b(?:more|the (?:full|balance))\b",
+        r"\b(?:settlement|offer|payment|valuation|sum offered) (?:was|is|wasn't|isn't)\b[^.]{0,50}\b(?:too low|unfair|insufficient|not fair|inadequate|understated)\b",
+        r"\b(?:didn't|did not|don't|do not) (?:agree|think|accept)\b[^.]{0,60}\b(?:offer|settlement|valuation|amount)\b[^.]{0,40}\b(?:fair|reasonable)\b",
+        r"\b(?:unfair|incorrect|wrong|excessive) (?:deduction|depreciation|betterment|excess|reduction)\b",
+        r"\bmarket value\b[^.]{0,70}\b(?:too low|understated|unfair|not fair)\b",
+        r"\bshould (?:pay|settle|increase|cover)\b[^.]{0,70}\b(?:more|the (?:full|balance|remainder|cost)|in full)\b",
         r"\b8% simple interest\b",
+        r"\b(?:fair|reasonable) (?:that|for)\b[^.]{0,60}\bsettle the claim\b",
     ]),
     "process": (HANDLING, [
-        r"\b(?:didn't|did not|failed to) (?:consider|assess|deal with|progress|handle) the claim\b",
-        r"\b(?:wrong|incorrect) (?:policy|section|cover) (?:was )?applied\b",
-        r"\bclaim (?:was )?(?:never|not) (?:properly )?(?:considered|assessed|investigated)\b",
-        r"\bICOBS 8\.1\b|\bhandle claims promptly and fairly\b|\bunreasonably (?:decline|reject)\b",
+        r"\b(?:didn't|did not|failed to) (?:consider|assess|deal with|progress|handle|investigate) (?:the|this|his|her|their) claim\b",
+        r"\b(?:wrong|incorrect) (?:policy|section|cover|term) (?:was )?(?:applied|relied on)\b",
+        r"\bclaim (?:was )?(?:never|not) (?:properly |fairly )?(?:considered|assessed|investigated|handled)\b",
+        r"\bICOBS 8\.1\b|\bhandle claims promptly and fairly\b|\bunreasonably (?:decline|reject)\w*\b",
+        # The single most common formula in the corpus, and it was missing.
+        r"\bunfairly (?:declin\w+|reject\w+|refus\w+|repudiat\w+|void\w+|cancel\w+|settl\w+|handl\w+|turned down)\b",
+        r"\b(?:it|they|the insurer) (?:acted|behaved) unfairly\b",
+        r"\b(?:unfair|not fair|wasn't fair|isn't fair) (?:to|that|of)\b[^.]{0,60}\b(?:declin\w+|reject\w+|refus\w+|cancel\w+|void\w+)\b",
     ]),
 }
 
@@ -147,38 +161,79 @@ def family(grounds: list[str]) -> str:
     return "untagged"
 
 
-# Did the ombudsman actually disturb the claim outcome, or only the handling?
-# "Upheld" covers both, and they are commercially different events: one says
-# the decision was wrong, the other says the decision stood and the service
-# around it did not.
-_CLAIM_DISTURBED = [
-    re.compile(r"(?i)\bmust (?:now )?(?:pay|settle|meet|reimburse) the claim\b"),
-    re.compile(r"(?i)\b(?:must|should) (?:now )?(?:reconsider|reassess|review) "
-               r"(?:the|this|his|her|their) claim\b"),
-    re.compile(r"(?i)\bdeal with the claim\b[^.]{0,40}\b(?:policy terms|remaining)\b"),
-    re.compile(r"(?i)\b(?:pay|settle)[^.]{0,60}\bthe (?:full |outstanding |remaining )?"
-               r"(?:claim|settlement|balance)\b"),
-    re.compile(r"(?i)\bcover the (?:cost|claim)\b"),
-    re.compile(r"(?i)\bremove the (?:decline|declinature)\b"),
-    re.compile(r"(?i)\breinstate the (?:policy|claim)\b"),
-]
-# Money that is only compensation for the experience, not the claim itself.
-_DISTRESS_ONLY = re.compile(
-    r"(?i)\b(?:distress and inconvenience|trouble and upset|the impact on)\b")
+# Did the ombudsman disturb the claim outcome, or only the handling?
+#
+# "Upheld" covers both and they are commercially different events. Getting this
+# split from the *reasoning* does not work — the reasoning is discursive. The
+# operative directions do work, because they are a short, formulaic list:
+# "I direct X to: accept the claim... pay £150 compensation."
+#
+# The first version of this looked for "must pay the claim" and called
+# everything else untouched. Reading the cases it classified that way found
+# "accept the claim and repair the laptop", "increase the cash settlement to
+# £355" and "pay Mr W's claim for his pet's treatment" all counted as the claim
+# standing. The share it produced was wrong by roughly a factor of two, so the
+# verb list below is deliberately broad and the possessive gap is allowed for.
+_CLAIM_AFFECTING = re.compile(
+    r"\b(?:accept|pay|settle|meet|reimburse|refund|cover|honour|"
+    r"reconsider|reassess|re-assess|review|repair|replace|increase|"
+    r"reinstate|remove|rectify|process|progress)\b"
+    r"[^.;\n]{0,80}?"
+    r"\b(?:the claim|this claim|his claim|her claim|their claim|the settlement|"
+    r"the cash settlement|the excess|policy benefit|"
+    r"the (?:full |outstanding |remaining |repair )?costs?|the decline|"
+    r"the declinature|the policy|the benefit|the invoice|the treatment|"
+    r"the damage|the loss|the outstanding balance|the balance)\b"
+    # or the direction names a sum that is plainly not compensation
+    r"|\b(?:reimburse|refund|pay)\b[^.;\n]{0,60}\bfor the (?:cost|costs|"
+    r"price|value|repair|replacement|treatment|survey|report)\b"
+    r"|\bincrease the (?:cash )?settlement\b"
+    r"|\b(?:accept|cover)\b[^.;\n]{0,60}\bunder the\b[^.;\n]{0,40}"
+    r"\b(?:policy|section|terms)\b"
+    # "Settle Mr S' claims under the remaining policy terms" — a possessive
+    # ending in a bare apostrophe, and a plural. Both were missed.
+    r"|\b\w+['’]s?\s+claims?\b"
+    r"|\b(?:vet|vet's|repairer's|garage's) invoice\b"
+    r"|\bbenefit for\b",
+    re.I)
+
+
+# Compensation for the experience: the sum that is not the claim.
+_COMPENSATION = re.compile(
+    r"£\s?[\d,]+(?:\.\d{2})?\s*(?:in )?compensation\b"
+    r"|\bcompensation\b[^.;\n]{0,40}\b(?:distress|inconvenience|trouble|"
+    r"upset|impact|worry)\b"
+    r"|\b(?:distress and inconvenience|trouble and upset)\b",
+    re.I)
+
+# Where the operative directions live.
+_REMEDY_SECTION = re.compile(
+    r"(?is)(?:putting things right|my final decision|i direct|must now|should now)")
+
+
+def remedy_text(reasoning: str, outcome: str) -> str:
+    """The part of a decision that contains the operative directions.
+
+    Falls back to the whole text: a decision whose directions we cannot locate
+    should be read in full rather than scored on nothing.
+    """
+    whole = f"{reasoning}\n{outcome}"
+    m = _REMEDY_SECTION.search(whole)
+    return whole[m.start():] if m else whole
 
 
 def claim_decision_disturbed(remedy: str) -> bool:
-    """True when the remedy changes what happens to the claim itself.
+    """True when the directions change what happens to the claim itself.
 
     False means the ombudsman upheld the complaint without touching the
     outcome — the declinature stood and the insurer lost on how it got there.
     """
-    return any(p.search(remedy) for p in _CLAIM_DISTURBED)
+    return bool(_CLAIM_AFFECTING.search(remedy))
 
 
-def distress_only(remedy: str) -> bool:
-    """The remedy is compensation for the experience and nothing else."""
-    return bool(_DISTRESS_ONLY.search(remedy)) and not claim_decision_disturbed(remedy)
+def compensation_only(remedy: str) -> bool:
+    """The directions award compensation for the experience and nothing else."""
+    return bool(_COMPENSATION.search(remedy)) and not claim_decision_disturbed(remedy)
 
 
 def awards(putting_right: str) -> list[float]:

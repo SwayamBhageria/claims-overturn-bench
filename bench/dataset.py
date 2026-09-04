@@ -52,6 +52,29 @@ class Case:
         return g.family(self.grounds)
 
 
+TEXT_CACHE = ROOT / ".cache" / "text"
+
+
+def _text_for(pdf: Path, drn: str) -> str:
+    """Extracted text, memoised on disk.
+
+    Re-extracting every PDF costs about a minute over the full corpus, which
+    is fine once and not fine for a command-line tool a handler runs per case.
+    The cache is keyed on the PDF's modification time as well as its name, so
+    a re-fetched file is re-extracted rather than served stale.
+    """
+    stamp = f"{int(pdf.stat().st_mtime)}"
+    cached = TEXT_CACHE / f"{drn}.{stamp}.txt"
+    if cached.exists():
+        return cached.read_text()
+    text = sections.extract_text(pdf)
+    TEXT_CACHE.mkdir(parents=True, exist_ok=True)
+    for stale in TEXT_CACHE.glob(f"{drn}.*.txt"):
+        stale.unlink()
+    cached.write_text(text)
+    return text
+
+
 def read_rows(path: Path = CORPUS) -> list[dict]:
     if not path.exists():
         return []
@@ -80,7 +103,7 @@ def load_cases(*, claims_only: bool = True, path: Path = CORPUS,
                 continue
             raise FileNotFoundError(pdf)
         try:
-            text = sections.extract_text(pdf)
+            text = _text_for(pdf, row["drn"])
             dec = sections.split(text, row["drn"])
         except Exception:                      # noqa: BLE001 - a stale cache entry
             continue

@@ -3,9 +3,10 @@
 **A claims platform decides to decline. What does the published record say about whether that
 decision survives the ombudsman — and can the ones that won't be spotted before they are sent?**
 
-Every AI claims product in the market is sold on the same two numbers: speed and cost. Three
-times faster. Sixty per cent lower cycle time. Ninety-nine per cent straight-through. All of
-those are measurable from the inside on the day a claim closes.
+The AI claims products I could find are sold on two numbers: speed and cost. Three times faster.
+Sixty per cent lower cycle time. Ninety-nine per cent straight-through processing, 246% ROI.
+Every one of those is measurable from the inside, on the day the claim closes, by the party with
+an interest in the answer.
 
 There is a third number and it arrives eighteen months later, from outside, from someone with
 statutory power to substitute their own view: the share of decisions that don't hold up. In the
@@ -99,12 +100,18 @@ claim, and it is what the category's speed metrics are already adjacent to witho
 *Run `python -m bench.run`.*
 <!--/AUTO:COST-->
 
-The award is not the whole cost and is usually not the largest part of it. A complaint that goes
-to investigation carries the ombudsman's **case fee of £680 in 2026/27** — payable by the
-respondent business whether it wins or loses, above a £2,000 annual allowance
-([case fees](https://www.financial-ombudsman.org.uk/businesses/resolving-complaint/case-fees)).
-On top sit the claim itself where it is paid, 8% simple interest where it is late, the handling
-time, and the client conversation.
+The award is not the whole cost and is usually not the largest part of it. Reaching investigation
+at all carries the ombudsman's case fee, and the ombudsman's own wording is the part worth
+quoting: *"Respondent financial businesses pay a case fee regardless of the outcome of a
+complaint."* The fee is **£680** where the outcome changes in the consumer's favour, against a
+**£2,000 allowance for the financial year**; it falls to £500 only where a professional
+representative referred the case and the business did not lose
+([case fees](https://www.financial-ombudsman.org.uk/businesses/resolving-complaint/case-fees),
+read 2026-09-04).
+
+So the cost of a decision that does not hold up is the fee, plus the claim where it is then paid,
+plus 8% simple interest where it was late, plus the handling time, plus the conversation with the
+client whose policyholder it was. Only the first of those is on this page.
 
 ---
 
