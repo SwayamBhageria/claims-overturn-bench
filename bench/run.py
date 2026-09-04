@@ -328,7 +328,11 @@ def main() -> int:
     pred = prediction(cases)
 
     out = {
-        "corpus_file": str(a.corpus),
+        # Relative when it sits inside the repo: an absolute path here writes
+        # the author's home directory into a published results file.
+        "corpus_file": (str(a.corpus.relative_to(ROOT))
+                        if a.corpus.is_absolute() and a.corpus.is_relative_to(ROOT)
+                        else str(a.corpus)),
         "n_splits": N_SPLITS,
         "seed": SEED,
         "composition": composition(rows, cases, a.corpus),
