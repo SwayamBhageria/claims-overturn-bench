@@ -47,9 +47,57 @@ _FINAL = re.compile(r"(?mi)^[ \t]*My (?:final )?decision[ \t]*$")
 
 # The adjudicator's provisional view. FOS calls the first-stage decision maker
 # an "investigator" and, in older decisions, an "adjudicator".
-_INVESTIGATOR = re.compile(
-    r"(?mi)^[^\n]*\b(?:our|the|an)\s+(?:investigator|adjudicator)\b[^\n]*$"
-)
+#
+# This has to work sentence by sentence, and the first version did not — it
+# removed the *line* containing the word, and PDF text wraps, so it deleted
+# "Our investigator looked at the complaint." and left the sentence that
+# followed: "She recommended that D&G settle the claim in line with the
+# remaining policy terms, and pay Mr S £100 compensation." That recommendation
+# is the outcome, in the input, in 56% of cases. It is the reason the strongest
+# terms predicting "upheld" were `compensation`, `recommended` and `£100`.
+#
+# The distinction that matters: the adjudicator's recommendation is a prior
+# adjudication and must go, but the *insurer's own* offer during the claim
+# ("They offered Mrs A £250 compensation as a result") is claim history a
+# handler would hold, and removing it would strip a real fact.
+_INVESTIGATOR_SENTENCE = re.compile(
+    # named, in either FOS vocabulary
+    r"\b(?:our|the|an|of our)\s+(?:investigators?|adjudicators?)\b"
+    # the same person, carried by pronoun into the following sentences
+    r"|\b(?:she|he|they)\s+(?:also\s+)?(?:recommended|didn't think|did not think|"
+    r"thought|concluded|wasn't persuaded|was not persuaded)\b"
+    # the recommendation itself, whoever is named as making it
+    r"|\brecommend\w*\b[^.]{0,80}?\b(?:pay|settle|accept|increase|reconsider|"
+    r"compensat\w+|uphold)\b"
+    # this service reaching a view, as opposed to the business doing something
+    r"|\b(?:this|our) service\b[^.]{0,60}\b(?:thought|considered|recommended|"
+    r"asked|told)\b",
+    re.I)
+
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+
+# Once the adjudicator has been introduced, the decision refers to them by
+# pronoun for a sentence or two: "Our investigator looked at this. She
+# recommended... She also said the business should pay £100 compensation."
+# A bare pronoun alone is not enough to attribute, because the very next
+# sentence is often the complainant — "She disagreed and asked for an
+# ombudsman's decision" — so a continuation also has to be *about* what the
+# business ought to do.
+_PRONOUN_START = re.compile(r"^\s*(?:she|he|they)\b", re.I)
+
+# A decision issued after a provisional one reproduces the provisional
+# reasoning in its preamble, and that reasoning states the intended outcome:
+# "I issued a provisional decision explaining that I was intending to uphold
+# Mr S\'s complaint." That is the answer, above the cut, in about a fifth of
+# cases. Sentences mentioning a provisional decision are held out with the
+# adjudicator\'s view, and `leak_terms` carries the phrasings as a backstop so
+# anything that gets past this drops the case rather than poisoning it.
+_PROVISIONAL = re.compile(
+    r"\bprovisional(?:ly)?\s+(?:decision|decided|findings|conclusions?|view)\b"
+    r"|\bI provisionally\b|\bmy provisional\b", re.I)
+_RECOMMENDING = re.compile(
+    r"\b(?:should|ought to|must|to pay|pay|settle|accept|increase|reconsider|"
+    r"compensat\w+|uphold|fair|reasonable|unfair|unreasonable)\b", re.I)
 
 # Verdict wording. If any of this is above the cut, the input contains its own
 # answer and the case is unusable.
@@ -59,6 +107,11 @@ _LEAKS = [
     re.compile(r"(?i)\bI(?:’|')m (?:not )?upholding\b"),
     re.compile(r"(?i)\bmy final decision is\b"),
     re.compile(r"(?i)\bit follows that I\b"),
+    # Provisional-decision wording. A final decision issued after a
+    # provisional one quotes its own earlier intention, which is the outcome.
+    re.compile(r"(?i)\b(?:intending|intend|minded|proposing) to (?:uphold|not uphold)\b"),
+    re.compile(r"(?i)\bI (?:was|am) (?:intending|minded) to\b"),
+    re.compile(r"(?i)\bprovisionally (?:uphold|decided to uphold|concluded)\b"),
 ]
 
 _DRN = re.compile(r"\bDRN-\d+\b")
@@ -128,10 +181,7 @@ def split(text: str, drn: str = "") -> Decision:
         complaint = head[m_complaint.end():]
         happened = ""
 
-    investigator = "\n".join(
-        m.group(0).strip() for m in _INVESTIGATOR.finditer(happened)
-    ).strip()
-    happened = _INVESTIGATOR.sub("", happened)
+    happened, investigator = _strip_investigator(happened)
 
     m_final = _FINAL.search(tail)
     reasoning = tail[:m_final.start()] if m_final else tail
@@ -145,6 +195,28 @@ def split(text: str, drn: str = "") -> Decision:
         reasoning=_tidy(reasoning),
         outcome_text=_tidy(outcome),
     )
+
+
+def _strip_investigator(text: str) -> tuple[str, str]:
+    """Split the facts from the adjudicator's provisional view.
+
+    Sentence by sentence, on whitespace-normalised text: the section arrives
+    hard-wrapped from the PDF, so a line is not a unit of meaning here and
+    treating it as one is what let the recommendation survive.
+    """
+    flat = re.sub(r"\s*\n\s*", " ", text)
+    flat = re.sub(r"[ \t]+", " ", flat).strip()
+    kept, removed = [], []
+    in_view = False
+    for sentence in _SENTENCE_SPLIT.split(flat):
+        if _INVESTIGATOR_SENTENCE.search(sentence) or _PROVISIONAL.search(sentence):
+            in_view = True
+        elif in_view and _PRONOUN_START.match(sentence) and _RECOMMENDING.search(sentence):
+            pass                      # still the adjudicator, by pronoun
+        else:
+            in_view = False
+        (removed if in_view else kept).append(sentence)
+    return " ".join(kept).strip(), " ".join(removed).strip()
 
 
 def _tidy(s: str) -> str:

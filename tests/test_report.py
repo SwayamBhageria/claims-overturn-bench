@@ -25,7 +25,7 @@ def test_render_replaces_only_the_marked_block():
     assert out.endswith("outtro\n")
     assert "old table" not in out
     assert "£680" in out
-    assert "median award" in out
+    assert "median compensation" in out
 
 
 def test_render_is_idempotent():
