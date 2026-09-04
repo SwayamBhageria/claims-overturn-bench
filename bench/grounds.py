@@ -174,30 +174,61 @@ def family(grounds: list[str]) -> str:
 # £355" and "pay Mr W's claim for his pet's treatment" all counted as the claim
 # standing. The share it produced was wrong by roughly a factor of two, so the
 # verb list below is deliberately broad and the possessive gap is allowed for.
-_CLAIM_AFFECTING = re.compile(
-    r"\b(?:accept|pay|settle|meet|reimburse|refund|cover|honour|"
-    r"reconsider|reassess|re-assess|review|repair|replace|increase|"
-    r"reinstate|remove|rectify|process|progress)\b"
-    r"[^.;\n]{0,80}?"
-    r"\b(?:the claim|this claim|his claim|her claim|their claim|the settlement|"
-    r"the cash settlement|the excess|policy benefit|"
-    r"the (?:full |outstanding |remaining |repair )?costs?|the decline|"
-    r"the declinature|the policy|the benefit|the invoice|the treatment|"
-    r"the damage|the loss|the outstanding balance|the balance)\b"
-    # or the direction names a sum that is plainly not compensation
-    r"|\b(?:reimburse|refund|pay)\b[^.;\n]{0,60}\bfor the (?:cost|costs|"
-    r"price|value|repair|replacement|treatment|survey|report)\b"
-    r"|\bincrease the (?:cash )?settlement\b"
-    r"|\b(?:accept|cover)\b[^.;\n]{0,60}\bunder the\b[^.;\n]{0,40}"
-    r"\b(?:policy|section|terms)\b"
-    # "Settle Mr S' claims under the remaining policy terms" — a possessive
-    # ending in a bare apostrophe, and a plural. Both were missed.
-    r"|\b\w+['’]s?\s+claims?\b"
-    r"|\b(?:vet|vet's|repairer's|garage's) invoice\b"
-    r"|\bbenefit for\b",
+# A direction is claim-affecting when it tells the insurer to do something
+# about the claim: accept it, pay it, reconsider it, put right the loss.
+#
+# Enumerating the nouns did not work. It missed "Pay £265 for snagging work",
+# "Paying the foreign exchange conversion charge", "£12,500 as the market
+# value of his car" and "Repair the fault on Mr L's phone" — recall 64% against
+# hand labels, understating the claim-affecting share by 17 points — while
+# matching "the policy" in premium-refund directions it should have ignored.
+#
+# So the test is by clause and by exclusion instead. A directive clause counts
+# unless it is one of the two things that are plainly *not* the claim:
+# compensation for the experience, and a refund of premium.
+# Verb stems, matched with an optional inflection, because the ombudsman
+# writes "reconsider", "reconsidering" and "reconsiders" interchangeably. The
+# list was too short at first and it cost recall: "reconsidering D's claim",
+# "proceed with Mr M's claim", "Consider Mrs Q's claim", "Waive the £1,000
+# excess", "Update the claim to show as non-fault", "Restore Mr K's no-claims
+# discount" and "arrange for the flooring to be remedied" were all directions
+# about the claim that no pattern matched.
+_DIRECTIVE = re.compile(
+    r"\b(?:accept|pay|settl|meet|reimburs|refund|cover|honour|consider|"
+    r"reconsider|reassess|re-assess|review|repair|replac|increas|reinstat|"
+    r"remov|rectif|assess|deal with|progress|proceed|waiv|updat|restor|"
+    r"arrang|inspect|remed|calculat|recalculat|take responsibility|appl)"
+    r"(?:e|es|ed|ing|s|ate)?\b",
     re.I)
 
+# Compensation for the experience. Distinguished from a payment for a loss:
+# "£750 compensation for the distress" is not the claim, "£900 compensation for
+# his loss of income" is.
+_DISTRESS_CLAUSE = re.compile(
+    r"\b(?:distress|inconvenience|trouble|upset|worry|frustration|"
+    r"the impact (?:it|this) had)\b", re.I)
+_BARE_COMPENSATION = re.compile(
+    r"\bcompensation\b(?![^.;\n]{0,40}\b(?:for the (?:loss|cost)|loss of "
+    r"(?:income|rent|earnings)|in settlement)\b)", re.I)
 
+# A premium refund is a contract remedy, not a claim payment.
+_PREMIUM_ONLY = re.compile(
+    r"\b(?:refund|reimburse|return)\b[^.;\n]{0,60}\bpremium", re.I)
+
+# Wordings that name the claim outright, wherever they sit in the clause.
+_NAMES_THE_CLAIM = re.compile(
+    r"\b(?:the|this|his|her|their|its) claims?\b"
+    # "Mr S' claims" — a possessive ending in a bare apostrophe, which the
+    # first version missed because it required an s after it.
+    r"|\b\w+['’]s?\s+claims?\b"
+    r"|\bin respect of (?:his|her|their|the) claim\b"
+    r"|\bsettlement\b|\bmarket value\b|\bpolicy benefit\b|\bexcess\b"
+    r"|\bloss of (?:income|rent|rental|earnings)\b|\brental income\b"
+    r"|\bno[- ]claims? (?:bonus|discount)\b|\bnon[- ]fault\b"
+    r"|\btrade[- ]?in value\b|\bindemnity period\b",
+    re.I)
+
+# The boilerplate every decision ends with, which is not a direction.
 # Compensation for the experience: the sum that is not the claim.
 _COMPENSATION = re.compile(
     r"£\s?[\d,]+(?:\.\d{2})?\s*(?:in )?compensation\b"
@@ -210,6 +241,66 @@ _COMPENSATION = re.compile(
 _REMEDY_SECTION = re.compile(
     r"(?is)(?:putting things right|my final decision|i direct|must now|should now)")
 
+_BOILERPLATE = re.compile(
+    r"Under the rules of the Financial Ombudsman Service|"
+    r"required to ask .{0,40} to accept or reject", re.I)
+
+
+def _clauses(remedy: str) -> list[str]:
+    """Split the directions into clauses: bullets, numbered items, sentences.
+
+    A clause ending in a colon introduces the ones after it — "Zurich will need
+    to pay: • A total of £4,600 for lost rental income" — so its verb is
+    carried forward. Without that the verb and the sum land in different
+    clauses and neither looks like a direction on its own.
+    """
+    text = _BOILERPLATE.split(remedy)[0]
+    text = re.sub(r"[•\u2022]|(?<=\s)\d+\.\s|(?<=\s)-\s", "\n", text)
+    parts = [p.strip() for p in re.split(r"[\n;]|(?<=[.])\s+", text) if p.strip()]
+    # One sentence can carry two directions: "pay her the trade in value of
+    # her phone (£335) and £150 for distress and inconvenience". Split on the
+    # conjunction when a second sterling sum follows it, so the compensation
+    # half cannot mask the claim half.
+    split_again: list[str] = []
+    for part in parts:
+        pieces = re.split(r"\s+and\s+(?=£)", part)
+        split_again.extend(pieces if len(pieces) > 1 else [part])
+    parts = split_again
+
+    out, lead = [], ""
+    for part in parts:
+        out.append(f"{lead} {part}".strip() if lead else part)
+        lead = part if part.rstrip().endswith(":") else ""
+    return out
+
+
+def claim_decision_disturbed(remedy: str) -> bool:
+    """True when the directions change what happens to the claim itself.
+
+    False means the ombudsman upheld the complaint without touching the
+    outcome — the declinature stood and the insurer lost on how it got there.
+    """
+    for clause in _clauses(remedy):
+        if not _DIRECTIVE.search(clause):
+            continue
+        if _PREMIUM_ONLY.search(clause) and not _NAMES_THE_CLAIM.search(clause):
+            continue
+        if (_DISTRESS_CLAUSE.search(clause) or _BARE_COMPENSATION.search(clause)) \
+                and not _NAMES_THE_CLAIM.search(clause):
+            continue
+        # A directive clause that is neither compensation nor a premium refund
+        # is doing something about the claim, whether or not it names it.
+        if _NAMES_THE_CLAIM.search(clause) or re.search(r"£\s?[\d,]", clause) \
+                or re.search(r"\b(?:accept|reconsider|reassess|repair|replace|"
+                             r"reinstate|take responsibility)\b", clause, re.I):
+            return True
+    return False
+
+
+def compensation_only(remedy: str) -> bool:
+    """The directions award compensation for the experience and nothing else."""
+    return bool(_COMPENSATION.search(remedy)) and not claim_decision_disturbed(remedy)
+
 
 def remedy_text(reasoning: str, outcome: str) -> str:
     """The part of a decision that contains the operative directions.
@@ -220,20 +311,6 @@ def remedy_text(reasoning: str, outcome: str) -> str:
     whole = f"{reasoning}\n{outcome}"
     m = _REMEDY_SECTION.search(whole)
     return whole[m.start():] if m else whole
-
-
-def claim_decision_disturbed(remedy: str) -> bool:
-    """True when the directions change what happens to the claim itself.
-
-    False means the ombudsman upheld the complaint without touching the
-    outcome — the declinature stood and the insurer lost on how it got there.
-    """
-    return bool(_CLAIM_AFFECTING.search(remedy))
-
-
-def compensation_only(remedy: str) -> bool:
-    """The directions award compensation for the experience and nothing else."""
-    return bool(_COMPENSATION.search(remedy)) and not claim_decision_disturbed(remedy)
 
 
 def awards(remedy: str) -> list[float]:
