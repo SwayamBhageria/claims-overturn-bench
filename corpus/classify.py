@@ -10,12 +10,17 @@ decisions that mention a hire car, so a count of query hits is not a count of
 decisions about motor.
 
 **Complaint type.** This is the filter that decides what the benchmark is even
-measuring. A large share of published insurance decisions are not about a
-claim at all — they are about a premium increase, a mis-sale at the point of
-sale, or a mid-term cancellation. Scoring a claim-decision model on those
-would inflate the sample with cases where the model is answering a question
-nobody asked it. Only `CLAIM` cases enter the benchmark; the rest are counted
-and reported, because how large that share is turns out to matter.
+measuring. Not every published insurance decision is about a claim: some are
+about a premium increase, a mis-sale at the point of sale, or a mid-term
+cancellation, and scoring a claim-decision model on those inflates the sample
+with cases where the model is answering a question nobody asked it. Only
+`CLAIM` cases enter the benchmark; the rest are counted and reported rather
+than silently dropped.
+
+The excluded share here is small, and that is a fact about the retrieval, not
+about the ombudsman: every query used to build the corpus contains the word
+"claim". It is not an estimate of how much of the ombudsman's insurance
+casework concerns claims.
 
 Both classifiers are rules over the text rather than a model, for the reason
 that governs the whole repo: every number here has to be checkable by hand.
@@ -33,11 +38,18 @@ PRODUCT_PATTERNS: list[tuple[str, str]] = [
     ("travel",    r"\btravel (?:insurance|policy|cover)\b|\bsingle[- ]trip\b|\bannual multi[- ]trip\b"),
     ("pet",       r"\bpet (?:insurance|policy|cover)\b|\bveterinary\b|\bvet(?:'s)? (?:fees|bills)\b"),
     ("gadget",    r"\b(?:gadget|mobile phone|mobile telephone|phone) (?:insurance|policy|cover)\b"
-                  r"|\b(?:replace|repair|settle\w*)\w*\b[^.]{0,40}\b(?:mobile phone|handset)\b"),
-    ("motor",     r"\b(?:motor|car|vehicle|van|motorcycle) (?:insurance|policy|cover)\b|\bcomprehensive motor\b"),
-    ("property",  r"\b(?:home|buildings|contents|household|landlord) (?:insurance|policy|cover)\b|\bbuildings and contents\b"),
+                  r"|\b(?:replace|repair|settle\w*)\w*\b[^.]{0,40}\b(?:mobile phone|handset)\b"
+                  r"|\bclaim for (?:a|his|her|their) (?:lost|stolen|damaged) "
+                  r"(?:phone|mobile|handset|laptop|tablet)\b"
+                  r"|\brepair of a damaged (?:laptop|phone|tablet)\b"),
+    ("motor",     r"\b(?:motor|car|vehicle|van|motorcycle) (?:insurance|policy|cover)\b|\bcomprehensive motor\b"
+                  r"|\bmotor (?:trade|warrant(?:y|ies)) (?:insurance|polic\w+)\b"
+                  r"|\b(?:his|her|their|the) car was (?:deemed|declared|written)\b"
+                  r"|\b(?:stolen|written[- ]off) car\b|\bcar bonnet\b|\bno claims? (?:bonus|discount)\b"),
+    ("property",  r"\b(?:home|buildings|contents|household|landlord) (?:insurance|policy|cover)\b|\bbuildings and contents\b"
+                  r"|\bproperty owners (?:insurance|polic\w+)\b|\bbuilding'?s? insurance\b"),
     ("warranty",  r"\b(?:warranty|guarantee|breakdown) (?:insurance|policy|cover)\b|\bextended warranty\b"
-                  r"|\bhome warranty\b|\bBuildmark\b"),
+                  r"|\bhome warranty\b|\bBuildmark\b|\b(?:furniture|appliance) warrant(?:y|ies)\b"),
     ("health",    r"\b(?:private medical|health|dental|critical illness|income protection) (?:insurance|policy|cover)\b"),
     ("life",      r"\b(?:life|term|over[- ]50s) (?:insurance|assurance|policy|cover)\b"),
     ("commercial", r"\b(?:commercial|business|public liability|professional indemnity|employers'? liability) (?:insurance|policy|cover)\b"),

@@ -88,3 +88,35 @@ def test_query_wording_does_not_decide_the_product():
     text = ("Mrs P has complained that her travel insurance claim was declined "
             "after her hire car was damaged abroad.")
     assert classify.product_line(text) == "travel"
+
+
+# Openings that an earlier version left as "unknown". None of them names the
+# product in the usual "<line> insurance policy" form, which is why they were
+# missed; all are real.
+LATE_PRODUCTS = [
+    ("Miss W has complained about the settlement offered by esure Insurance "
+     "Limited when her car was deemed a total loss.", "motor"),
+    ("Mr K has complained about the valuation Tradex paid for his stolen car "
+     "when he made a claim under his motor trade insurance policy.", "motor"),
+    ("Mr A has complained that Astrenska have declined his claim for a lost "
+     "phone.", "gadget"),
+    ("Mr W complains Great Lakes provided misleading information during his "
+     "claim for the repair of a damaged laptop.", "gadget"),
+    ("Mr F complains about how Helvetia settled his claim on a furniture "
+     "warranty.", "warranty"),
+    ("Mr A's complaint is about a claim he made on his LV property owners "
+     "insurance policy.", "property"),
+]
+
+
+def test_products_named_indirectly_are_still_classified():
+    for text, expected in LATE_PRODUCTS:
+        assert classify.product_line(text) == expected, text[:70]
+
+
+def test_a_hire_car_in_a_travel_claim_stays_travel():
+    # The reason product is read in a fixed order: travel is checked before
+    # motor, so a travel decision mentioning a car does not become a motor one.
+    assert classify.product_line(
+        "a claim she made on a travel insurance policy after her hire car was "
+        "damaged and her car was deemed a total loss") == "travel"
