@@ -56,6 +56,7 @@ class Report:
     upheld_among_precedents: int
     mean_similarity: float
     weak_match: bool
+    weak_threshold: float
     precedents: list[Precedent]
     grounds_seen: dict[str, int]
     checks: list[str]
@@ -72,9 +73,11 @@ class Report:
             f"mean similarity {self.mean_similarity:.2f}",
         ]
         if self.weak_match:
-            lines.append("  ! weak match — no closely similar published decision; "
-                         "this risk is close to the base rate and should not be "
-                         "read as case-specific")
+            lines.append(f"  ! weak match — mean similarity is below "
+                         f"{self.weak_threshold:.2f}, the level nine out of ten "
+                         f"real cases exceed against their own nearest "
+                         f"precedent. Read this risk as close to the base rate, "
+                         f"not as case-specific.")
         lines.append("")
         lines.append("grounds carried by the upheld precedents")
         if self.grounds_seen:
@@ -125,22 +128,57 @@ CHECKS: dict[str, str] = {
 GENERIC_CHECK = ("ICOBS 8.1: is this claim being handled promptly and fairly, "
                  "and is the declinature reasonable on the evidence held?")
 
-WEAK_SIMILARITY = 0.20   # below this, the neighbourhood is not case-specific
+WEAK_PERCENTILE = 10     # see `weak_threshold`
 
 
-def build_index(min_similarity_cases: list[Case] | None = None) -> tuple[PrecedentKNN, list[Case]]:
-    cases = min_similarity_cases if min_similarity_cases is not None else load_cases()
+def weak_threshold(model: PrecedentKNN, cases: list[Case], sample: int = 200,
+                   seed: int = 0) -> float:
+    """The similarity below which a neighbourhood is not case-specific.
+
+    This was a constant, and the constant was wrong. Cosine similarity between
+    a short draft and a full published decision lands around 0.1 in this
+    geometry, so a threshold of 0.2 flagged every case as a weak match,
+    including ones whose neighbours were plainly on point — a warning that
+    fires always carries no information.
+
+    So it is measured instead: take real cases, and for each one compute the
+    same statistic the report compares against it — the mean similarity of its
+    top-k neighbours, excluding itself. "Weak" then means *less similar than
+    nine out of ten real cases are to their own precedent set*, which is a
+    statement about this corpus rather than a number someone picked.
+
+    The statistic has to match on both sides. A first version took each case's
+    single nearest neighbour and compared the report's *mean over ten* against
+    it. The mean of ten is structurally below the maximum of ten, so every
+    case was flagged weak, including a query that was itself a corpus case.
+    """
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(len(cases), size=min(sample, len(cases)), replace=False)
+    means: list[float] = []
+    for i in idx:
+        # Skip the case itself, which is always its own nearest neighbour.
+        sims = [s for j, s, _u in model.neighbours(cases[i].text) if j != i]
+        if sims:
+            means.append(float(np.mean(sims)))
+    return float(np.percentile(means, WEAK_PERCENTILE)) if means else 0.0
+
+
+def build_index(cases: list[Case] | None = None
+                ) -> tuple[PrecedentKNN, list[Case], float]:
+    cases = cases if cases is not None else load_cases()
     if not cases:
         raise SystemExit(
-            "no corpus: run `python -m corpus.build` first (about 30 minutes, "
+            "no corpus: run `python -m corpus.build` first (about 50 minutes, "
             "it fetches published decisions from the ombudsman's website)")
     model = PrecedentKNN(k=15).fit([c.text for c in cases], [c.upheld for c in cases])
-    return model, cases
+    return model, cases, weak_threshold(model, cases)
 
 
 def check(facts: str, decision: str = "decline", reason: str = "",
           k: int = 10, cases: list[Case] | None = None) -> Report:
-    model, corpus = build_index(cases)
+    model, corpus, weak_at = build_index(cases)
     query = "\n".join(x for x in (facts, reason) if x)
 
     neigh = model.neighbours(query)[:k]
@@ -172,7 +210,8 @@ def check(facts: str, decision: str = "decline", reason: str = "",
         n_precedents=len(neigh),
         upheld_among_precedents=len(upheld_idx),
         mean_similarity=round(mean_sim, 4),
-        weak_match=mean_sim < WEAK_SIMILARITY,
+        weak_match=mean_sim < weak_at,
+        weak_threshold=round(weak_at, 4),
         precedents=precedents,
         grounds_seen=dict(ordered),
         checks=checks,

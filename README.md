@@ -8,11 +8,16 @@ Sixty per cent lower cycle time. Ninety-nine per cent straight-through processin
 Every one of those is measurable from the inside, on the day the claim closes, by the party with
 an interest in the answer.
 
-There is a third number and it arrives eighteen months later, from outside, from someone with
+There is a third number and it arrives a year or more later, from outside, from someone with
 statutory power to substitute their own view: the share of decisions that don't hold up. In the
-UK that someone is the Financial Ombudsman Service, and unusually, it publishes its work. Every
-final decision since 2013 is online with the case facts, the reasoning, the respondent firm, and
-the outcome — and the outcome is a **search filter**, which means the ground truth is queryable.
+UK that someone is the Financial Ombudsman Service.
+
+The ombudsman already publishes the aggregate. Half-yearly complaints data gives uphold rates per
+firm, and anyone can look up a carrier's record. What that cannot tell you is anything about a
+*decision* — which of the ones on your desk this afternoon is the kind that loses. For that you
+need the cases, and unusually, those are published too: every final decision since April 2013,
+with the facts, the reasoning, the respondent, and the outcome. The outcome is a **search
+filter**, which means the ground truth is queryable rather than something that has to be labelled.
 
 This repository turns that into three things:
 

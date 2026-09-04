@@ -133,3 +133,25 @@ def test_lsa_survives_a_corpus_smaller_than_its_component_count():
     y = [True] * 3 + [False] * 3
     m = baselines.PrecedentLSA(k=2, components=200).fit(texts, y)
     assert 0.0 <= m.predict_proba(["travel evidence"])[0] <= 1.0
+
+
+def test_weak_threshold_is_measured_from_the_corpus_not_assumed():
+    """A fixed threshold was wrong in both directions on real data."""
+    from checker.check import weak_threshold
+    from tests.test_run import make_case
+
+    # Genuinely varied vocabulary. Texts differing only by a number collapse
+    # to identical vectors, because the vectoriser's min_df drops terms that
+    # appear once — every similarity is then 1.0 and the threshold saturates.
+    subjects = ["travel", "pet", "motor", "home", "gadget", "warranty", "boat", "bike"]
+    faults = ["medical evidence not obtained", "unreasonable delay in settling",
+              "exclusion applied to circumstances it did not cover",
+              "settlement offer well below market value",
+              "policyholder never told why cover was refused"]
+    texts = [f"{s} insurance claim declined, {f}" for s in subjects for f in faults]
+    cases = [make_case(i, i % 2 == 0, f"F{i % 4}", text=t)
+             for i, t in enumerate(texts)]
+    m = baselines.PrecedentKNN(k=10).fit([c.text for c in cases],
+                                         [c.upheld for c in cases])
+    thr = weak_threshold(m, cases, sample=40)
+    assert 0.0 < thr < 1.0
