@@ -18,4 +18,7 @@ verify:            ## re-hash every cached decision against the corpus
 test:
 	python -m pytest -q
 
-all: rates run report test
+all: rates run report findings test
+
+findings:          ## regenerate FINDINGS.md from results/
+	python -m tools.findings
