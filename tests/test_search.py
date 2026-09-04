@@ -78,3 +78,40 @@ def test_pagination_stops_when_a_page_repeats_itself(monkeypatch):
     # is entirely duplicates and the loop must stop there.
     assert len(hits) == 2
     assert calls["n"] == 2
+
+
+# --- fetching ---------------------------------------------------------------
+
+def test_fetch_retries_a_transient_failure(tmp_path, monkeypatch):
+    """One read timeout in 1,500 fetches is near certain; without a retry it
+    silently costs a decision. This run lost exactly one that way."""
+    from corpus import build
+
+    monkeypatch.setattr(build, "CACHE", tmp_path)
+    calls = {"n": 0}
+
+    class Flaky:
+        def get(self, url, timeout=0):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise TimeoutError("read timed out")
+            return type("R", (), {"content": b"%PDF-ok",
+                                  "raise_for_status": lambda self: None})()
+
+    assert build.fetch_pdf("DRN-1", Flaky(), delay=0) == b"%PDF-ok"
+    assert calls["n"] == 2
+
+
+def test_fetch_rejects_html_served_with_a_200(tmp_path, monkeypatch):
+    from corpus import build
+
+    monkeypatch.setattr(build, "CACHE", tmp_path)
+
+    class Html:
+        def get(self, url, timeout=0):
+            return type("R", (), {"content": b"<html>maintenance</html>",
+                                  "raise_for_status": lambda self: None})()
+
+    with pytest.raises(RuntimeError, match="not a PDF"):
+        build.fetch_pdf("DRN-2", Html(), delay=0, retries=2)
+    assert not list(tmp_path.glob("*.pdf"))

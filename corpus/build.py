@@ -72,18 +72,39 @@ class Stats:
                 f"leaked={self.leaked} written={self.written}")
 
 
-def fetch_pdf(drn: str, session: requests.Session, delay: float = DELAY) -> bytes:
+def fetch_pdf(drn: str, session: requests.Session, delay: float = DELAY,
+              retries: int = 3) -> bytes:
+    """Fetch one decision, with backoff.
+
+    Retrying matters more than it looks. Over a run of 1,500 fetches a single
+    read timeout is close to certain, and without a retry it silently costs a
+    decision — the sort of loss that only shows up at batch scale and never in
+    a test. This run lost exactly one that way before the retry existed.
+
+    A 200 is also not enough on its own: the site answers some errors with an
+    HTML page, so the magic bytes are checked before the file is kept.
+    """
     path = CACHE / f"{drn}.pdf"
     if path.exists():
         return path.read_bytes()
-    r = session.get(PDF.format(drn=drn), timeout=90)
-    r.raise_for_status()
-    if not r.content.startswith(b"%PDF"):
-        raise ValueError(f"{drn}: response is not a PDF ({len(r.content)} bytes)")
-    CACHE.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(r.content)
-    time.sleep(delay)
-    return r.content
+
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            r = session.get(PDF.format(drn=drn), timeout=90)
+            r.raise_for_status()
+            if not r.content.startswith(b"%PDF"):
+                raise ValueError(
+                    f"{drn}: response is not a PDF ({len(r.content)} bytes)")
+            CACHE.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(r.content)
+            time.sleep(delay)
+            return r.content
+        except Exception as exc:                      # noqa: BLE001 - retried
+            last = exc
+            if attempt < retries - 1:
+                time.sleep(delay * (2 ** attempt))
+    raise RuntimeError(f"{drn}: {retries} attempts failed: {last}") from last
 
 
 def month_slices(date_from: str, date_to: str, months: int) -> list[tuple[str, str]]:
