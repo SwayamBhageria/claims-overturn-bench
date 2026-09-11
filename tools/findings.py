@@ -94,9 +94,18 @@ Median compensation, where any is awarded, is **£{co['median_award_gbp']:,.0f}*
 wording is the part worth quoting: *"Respondent financial businesses pay a case fee regardless
 of the outcome of a complaint."*
 
-The fee for the complaint existing is more than three times the median award for losing it. The
-claim itself, 8% interest, handling time and the client conversation sit on top; only the fee
-and the award are measured here.
+The fee for the complaint existing is {680 / co['median_award_gbp']:.1f} times the median award
+for losing it. The claim itself, 8% interest, handling time and the client conversation sit on
+top; only the fee and the award are measured here.
+
+**That £{co['median_award_gbp']:,.0f} is the median across all upheld decisions and is not the
+figure for F2's subset.** Where the claim decision stood, the median award is
+**£{co['claim_stood_median_award_gbp']:,.0f}**
+({co['claim_stood_cases_with_award']:,} of {co['claim_stood_upheld']:,}), and the fee is
+{680 / co['claim_stood_median_award_gbp']:.1f} times it rather than
+{680 / co['median_award_gbp']:.1f}. Those cases are also the ones where the award is the whole
+bill, because no claim is paid on top. F2 and F3 sit next to each other and measure different
+sets; quoting one median against the other's population is the easiest mistake to make here.
 
 ## F4 — The overturned decisions are identifiable before they are sent
 

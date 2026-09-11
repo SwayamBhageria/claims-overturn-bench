@@ -241,6 +241,12 @@
     "mean_award_gbp": 356.08,
     "p90_award_gbp": 795.0,
     "max_award_gbp": 3000.0,
+    "claim_stood_cases_with_award": 151,
+    "claim_stood_upheld": 199,
+    "claim_stood_median_award_gbp": 250.0,
+    "claim_disturbed_cases_with_award": 271,
+    "claim_disturbed_upheld": 427,
+    "claim_disturbed_median_award_gbp": 200.0,
     "fos_case_fee_gbp_2026_27": 680
   },
   "prediction": {

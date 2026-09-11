@@ -88,6 +88,27 @@ def test_cost_extracts_awards_and_keeps_the_case_fee(cases):
     assert c["fos_case_fee_gbp_2026_27"] == 680
 
 
+def test_cost_splits_the_award_by_whether_the_claim_decision_stood(cases):
+    """The all-upheld median belongs to neither subset, which is the trap.
+
+    Here it is £225 while no case in the corpus was awarded £225: the cases
+    where the declinature stood got £150 and the ones where it was disturbed
+    got £300. Quoting the headline against either subset is wrong in a
+    direction that is not obvious from the headline alone.
+    """
+    c = run.cost(cases)
+    assert c["claim_stood_upheld"] == 30
+    assert c["claim_stood_cases_with_award"] == 30
+    assert c["claim_stood_median_award_gbp"] == pytest.approx(150.0)
+
+    assert c["claim_disturbed_upheld"] == 30
+    assert c["claim_disturbed_cases_with_award"] == 30
+    assert c["claim_disturbed_median_award_gbp"] == pytest.approx(300.0)
+
+    assert c["median_award_gbp"] not in (
+        c["claim_stood_median_award_gbp"], c["claim_disturbed_median_award_gbp"])
+
+
 def test_prediction_runs_both_splits_and_beats_majority(cases):
     p = run.prediction(cases)
     for key in ("grouped_by_respondent", "random_split"):

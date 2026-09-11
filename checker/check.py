@@ -265,6 +265,33 @@ def check(facts: str, decision: str = "decline", reason: str = "",
     )
 
 
+def _parse(raw: str) -> dict | None:
+    """Read the payload, tolerating the newlines a real claim file contains.
+
+    The input to this tool is a case file, and case files have line breaks. A
+    literal newline inside a JSON string is invalid JSON, so a handler pasting
+    a real file gets a parse error on the one command they were told to run —
+    which is a defect in the reader, not in their file. `strict=False` accepts
+    control characters inside strings and changes nothing else, so it is tried
+    before giving up.
+    """
+    for strict in (True, False):
+        try:
+            payload = json.loads(raw, strict=strict)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            return payload
+        print("expected a JSON object with a \"facts\" key, got "
+              f"{type(payload).__name__}", file=sys.stderr)
+        return None
+    print("could not parse stdin as JSON. Expected an object with a \"facts\" "
+          "key, for example:\n"
+          '  {"facts": "...", "decision": "decline"}\n'
+          "Or skip JSON entirely and use --facts.", file=sys.stderr)
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Check a draft claim decision "
                                              "against published ombudsman decisions.")
@@ -278,7 +305,14 @@ def main() -> int:
     if a.facts:
         payload = {"facts": a.facts, "decision": a.decision, "reason": a.reason}
     else:
-        payload = json.load(sys.stdin)
+        raw = sys.stdin.read()
+        if not raw.strip():
+            print("no input on stdin. Pass --facts, or pipe in JSON with a "
+                  "\"facts\" key.", file=sys.stderr)
+            return 2
+        payload = _parse(raw)
+        if payload is None:
+            return 2
 
     if not payload.get("facts"):
         print("no facts given", file=sys.stderr)

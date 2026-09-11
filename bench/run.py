@@ -139,23 +139,51 @@ def grounds_analysis(cases) -> dict:
 
 
 def cost(cases) -> dict:
-    """Sterling awarded, from the remedy section of upheld decisions."""
+    """Sterling awarded, from the remedy section of upheld decisions.
+
+    Split by whether the claim decision itself was disturbed, because the two
+    are different events with different costs and the headline median belongs
+    to neither on its own. Where the declinature stood, the award is the whole
+    of what the insurer pays; where it did not, the claim is paid on top and
+    the award here is the smaller part of the bill.
+
+    Quoting the all-upheld median as the figure for either subset overstates
+    one and understates the other, so both are reported.
+    """
     per_case: list[float] = []
+    stood: list[float] = []
+    disturbed: list[float] = []
+    n_stood = 0
     for c in cases:
         if not c.upheld:
             continue
-        sums = grounds.awards(grounds.remedy_text(c.reasoning, c.outcome_text))
+        remedy = grounds.remedy_text(c.reasoning, c.outcome_text)
+        was_disturbed = grounds.claim_decision_disturbed(remedy)
+        if not was_disturbed:
+            n_stood += 1
+        sums = grounds.awards(remedy)
         if sums:
             per_case.append(max(sums))
+            (disturbed if was_disturbed else stood).append(max(sums))
     if not per_case:
         return {"cases_with_award": 0}
+    n_upheld = sum(1 for c in cases if c.upheld)
     return {
         "cases_with_award": len(per_case),
-        "share_of_upheld_with_award": len(per_case) / sum(1 for c in cases if c.upheld),
+        "share_of_upheld_with_award": len(per_case) / n_upheld,
         "median_award_gbp": statistics.median(per_case),
         "mean_award_gbp": round(statistics.mean(per_case), 2),
         "p90_award_gbp": round(float(np.percentile(per_case, 90)), 2),
         "max_award_gbp": max(per_case),
+        # The subset the "three in ten" finding is about. Its median is not
+        # the all-upheld median and must not be quoted as though it were.
+        "claim_stood_cases_with_award": len(stood),
+        "claim_stood_upheld": n_stood,
+        "claim_stood_median_award_gbp": statistics.median(stood) if stood else None,
+        "claim_disturbed_cases_with_award": len(disturbed),
+        "claim_disturbed_upheld": n_upheld - n_stood,
+        "claim_disturbed_median_award_gbp": (statistics.median(disturbed)
+                                             if disturbed else None),
         # The award is on top of the claim, and on top of the case fee the
         # respondent pays whatever the outcome. Fee source cited in the README.
         "fos_case_fee_gbp_2026_27": 680,

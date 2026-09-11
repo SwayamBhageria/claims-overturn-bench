@@ -109,3 +109,29 @@ def test_report_serialises_for_a_file_note(corpus):
     assert isinstance(d["overturn_risk"], float)
     assert isinstance(d["precedents"], list)
     assert "grounds" in d["precedents"][0]
+
+
+def test_a_pasted_case_file_with_line_breaks_still_parses():
+    """The README's own quickstart pastes a multi-line file into stdin.
+
+    Literal newlines inside a JSON string are invalid JSON, so the strict
+    reader rejected exactly the input the documentation told people to use.
+    This is the regression test for that: the only command a first-time
+    reader runs has to survive being copied.
+    """
+    raw = '{"facts": "She was admitted on 15 June\nand discharged on 19 June.",\n' \
+          ' "decision": "decline"}'
+    payload = chk._parse(raw)
+    assert payload is not None
+    assert "15 June" in payload["facts"]
+    assert payload["decision"] == "decline"
+
+
+def test_unparseable_input_says_what_was_expected(capsys):
+    assert chk._parse("this is not json at all {{{") is None
+    assert "facts" in capsys.readouterr().err
+
+
+def test_a_json_array_is_rejected_rather_than_indexed(capsys):
+    assert chk._parse('["facts", "decline"]') is None
+    assert "expected a JSON object" in capsys.readouterr().err

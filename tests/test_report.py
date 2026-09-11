@@ -19,6 +19,11 @@ def test_render_replaces_only_the_marked_block():
     analysis = {"cost": {"cases_with_award": 10, "share_of_upheld_with_award": 0.5,
                          "median_award_gbp": 300, "mean_award_gbp": 350.0,
                          "p90_award_gbp": 700.0, "max_award_gbp": 2000,
+                         "claim_stood_cases_with_award": 4, "claim_stood_upheld": 6,
+                         "claim_stood_median_award_gbp": 250,
+                         "claim_disturbed_cases_with_award": 6,
+                         "claim_disturbed_upheld": 14,
+                         "claim_disturbed_median_award_gbp": 320,
                          "fos_case_fee_gbp_2026_27": 680}}
     out = report.render(readme, analysis)
     assert out.startswith("intro\n")
@@ -33,6 +38,11 @@ def test_render_is_idempotent():
     analysis = {"cost": {"cases_with_award": 1, "share_of_upheld_with_award": 1.0,
                          "median_award_gbp": 100, "mean_award_gbp": 100.0,
                          "p90_award_gbp": 100.0, "max_award_gbp": 100,
+                         "claim_stood_cases_with_award": 1, "claim_stood_upheld": 1,
+                         "claim_stood_median_award_gbp": 100,
+                         "claim_disturbed_cases_with_award": 0,
+                         "claim_disturbed_upheld": 0,
+                         "claim_disturbed_median_award_gbp": 100,
                          "fos_case_fee_gbp_2026_27": 680}}
     once = report.render(readme, analysis)
     assert report.render(once, analysis) == once

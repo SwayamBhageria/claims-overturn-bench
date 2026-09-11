@@ -174,9 +174,13 @@ used to build them cannot test them.
 | mean compensation | £356 |
 | 90th percentile | £795 |
 | largest in corpus | £3,000 |
+| — where the claim decision **stood** | £250 (151 of 199) |
+| — where the claim decision was **disturbed** | £200 (271 of 427) |
 | ombudsman case fee, 2026/27, payable either way | £680 |
 
 Compensation for the experience only. The claim settlement is not extracted: remedy sections name the settlement, the earlier offer, the valuation and the policy limit in adjacent sentences, and picking between them reliably is not something a rule does well. So this column is the **smaller half** of what an overturned decision costs.
+
+The two subsets are split out because they are different events and the all-upheld median belongs to neither. Where the declinature stood — the "three in ten" cases in §1 — the median award is **£250**, and that award is the whole of what the insurer pays, against a case fee of £680. Quoting the £200 against that subset understates it.
 <!--/AUTO:COST-->
 
 The award is not the whole cost and is usually not the largest part of it. Reaching investigation
@@ -303,15 +307,40 @@ Over 2024-01-01 – 2026-08-31. These are rates over **decisions matching a full
 git clone https://github.com/SwayamBhageria/claims-overturn-bench
 cd claims-overturn-bench && pip install -r requirements.txt
 
-echo '{"facts": "Policyholder made a claim on a travel policy after falling ill abroad
-       and remaining past the planned return date. We requested a medical report from
-       the treating hospital, it was not received, and it was not chased for eleven
-       weeks. We declined the claim as there was no evidence it was medically
-       necessary for her to remain abroad.", "decision": "decline"}' \
-  | python -m checker.check
+cat <<'JSON' | python -m checker.check
+{"facts": "Mrs T holds an annual multi-trip travel policy, effective 4 March 2025.
+She travelled to Spain on 11 June with a planned return of 18 June. On 15 June she
+was admitted to hospital in Malaga with abdominal pain and kept in for four nights.
+She was discharged on 19 June and returned home on 24 June, six days late. She
+claimed 480 pounds of additional accommodation, 310 pounds of changed flights and
+145 pounds of out-of-pocket medical costs. Our assistance line was contacted by her
+husband on 16 June while she was an inpatient and a case was opened. We asked the
+treating hospital for a medical report on 27 June to confirm that remaining abroad
+after discharge was medically necessary. The report was not returned. The file shows
+no further contact with the hospital, and no contact with Mrs T about the outstanding
+report, between 27 June and 12 September, a period of eleven weeks. On 12 September
+we wrote to Mrs T declining the claim in full on the basis that there was no medical
+evidence that it was necessary for her to remain abroad beyond her discharge date,
+and that the policy covers only an extension that is medically necessary and
+authorised by the assistance line in advance. Mrs T complained that she was never
+told the report was outstanding, that she could have obtained it herself while still
+in Spain, and that she was not told on the assistance call that prior authorisation
+was required.",
+ "decision": "decline",
+ "reason": "No medical evidence that remaining abroad after discharge was medically
+ necessary, and the extension was not authorised in advance as the policy requires."}
+JSON
 ```
 
-That takes about a second. The repository ships a prebuilt precedent index
+That takes about a second.
+
+The example is a full file summary rather than two lines, because the length is
+load-bearing and it is the most common way to get a misleading answer out of this
+tool. Retrieval over TF-IDF needs enough words to find a neighbourhood: the median
+input in the corpus is 323 words, and a 58-word sketch of the same facts scores
+*below* the weak-match threshold, at roughly the 5th percentile of real cases. The
+checker says so when it happens, and that warning is the honest reading — but the
+fix is to give it the file, not to argue with the number. The repository ships a prebuilt precedent index
 (`data/index.npz`, 2.9 MB) so the hour of fetching that builds the corpus is only needed if
 you want to reproduce the measurements or extend the corpus yourself. The index is TF-IDF
 weights over a fixed vocabulary — word order is not retained, so the decisions cannot be

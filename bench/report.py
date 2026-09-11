@@ -112,6 +112,11 @@ def block_cost(a: dict) -> str:
         f"| mean compensation | £{c['mean_award_gbp']:,.0f} |",
         f"| 90th percentile | £{c['p90_award_gbp']:,.0f} |",
         f"| largest in corpus | £{c['max_award_gbp']:,.0f} |",
+        f"| — where the claim decision **stood** | £{c['claim_stood_median_award_gbp']:,.0f} "
+        f"({c['claim_stood_cases_with_award']:,} of {c['claim_stood_upheld']:,}) |",
+        f"| — where the claim decision was **disturbed** | "
+        f"£{c['claim_disturbed_median_award_gbp']:,.0f} "
+        f"({c['claim_disturbed_cases_with_award']:,} of {c['claim_disturbed_upheld']:,}) |",
         f"| ombudsman case fee, 2026/27, payable either way | "
         f"£{c['fos_case_fee_gbp_2026_27']} |",
         "",
@@ -120,6 +125,14 @@ def block_cost(a: dict) -> str:
         "policy limit in adjacent sentences, and picking between them reliably is not "
         "something a rule does well. So this column is the **smaller half** of what an "
         "overturned decision costs.",
+        "",
+        f"The two subsets are split out because they are different events and the "
+        f"all-upheld median belongs to neither. Where the declinature stood — the "
+        f"\"three in ten\" cases in §1 — the median award is "
+        f"**£{c['claim_stood_median_award_gbp']:,.0f}**, and that award is the whole of "
+        f"what the insurer pays, against a case fee of "
+        f"£{c['fos_case_fee_gbp_2026_27']}. Quoting the "
+        f"£{c['median_award_gbp']:,.0f} against that subset understates it.",
     ])
 
 
